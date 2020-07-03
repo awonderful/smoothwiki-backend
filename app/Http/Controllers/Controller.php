@@ -11,15 +11,4 @@ class Controller extends BaseController
 {
     use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
 
-    public function result($codeAlias, $data = []) {
-        return [
-            'code'    => config('result.'.$codeAlias),
-            'message' => __('result.'.$codeAlias),
-            'data'    => $data
-        ];
-    }
-
-    public function dataResult($data = []) {
-        return $this->result('SUCC', $data);
-    }
 }

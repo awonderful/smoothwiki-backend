@@ -9,6 +9,7 @@ return [
 	'INVALID_PARAM'   => 'Invalid parameter!',
 
 	'TREE_UPDATED'    => 'The tree has been updated, try it later!',
+	'TREE_NOT_EXIST'  => 'The tree doesn\'t exist!',
 	'ARTICLE_UPDATED' => 'The article has been updated, try it laster!',
 	'PAGE_UPDATED'    => 'The page has been updated, try it later!'
 ];

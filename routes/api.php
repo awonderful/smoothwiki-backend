@@ -21,4 +21,8 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 
 Route::middleware([])->group(function () {
     Route::get('tree/get', 'TreeController@getTree');
+    Route::get('tree/node/append', 'TreeController@appendChildNode');
+    Route::get('tree/node/rename', 'TreeController@renameNode');
+    Route::get('tree/node/move',   'TreeController@moveNode');
+    Route::get('tree/version/get', 'TreeController@getTreeVersion');
 });

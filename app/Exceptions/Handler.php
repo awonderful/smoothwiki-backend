@@ -3,6 +3,7 @@
 namespace App\Exceptions;
 
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use App\Libraries\Result;
 use Throwable;
 
 class Handler extends ExceptionHandler
@@ -50,6 +51,10 @@ class Handler extends ExceptionHandler
      */
     public function render($request, Throwable $exception)
     {
+        if ($exception instanceof \Illuminate\Validation\ValidationException) {
+            return response()->json(Result::get('INVALID_PARAM', $exception->errors()));
+        }
+
         return parent::render($request, $exception);
     }
 }

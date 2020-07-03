@@ -9,6 +9,7 @@ return [
 	'INVALID_PARAM' => '参数有误',
 
 	'TREE_UPDATED'    => '树结点已经发生变化，请刷新后重试',
+	'TREE_NOT_EXIST'  => '树不存在',
 	'ARTICLE_UPDATED' => '文章已经发生变化，请刷新后再编辑保存',
 	'PAGE_UPDATED'    => '页面已经发生变化，请刷新后再试'
 ];

@@ -7,11 +7,8 @@ return [
 		'PROJECT'      => 3, //项目
 	],
 	'TreeNodeCategory' => [  //树结点分类
-		'COLLECT'      => 1, //收藏夹
-		'HOMEPAGE'     => 2, //主页
-		'MAINTREE'     => 3, //空间主树
-		'TRASH'        => 4, //回收站
-		'DRAFT'        => 5, //草稿
+		'MAIN'         => 1, //空间主树
+		'TRASH'        => 2, //回收站
 	],
 	'TreeNodeType'     => [  //树结点类型
 		'ROOT'         => 1, //根结点
