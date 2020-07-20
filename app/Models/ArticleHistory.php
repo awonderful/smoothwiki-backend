@@ -7,8 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class ArticleHistory extends Model
 {
     protected $table = 'article_history';
-    protected $primaryKey = ['article_id', 'version'];
-    protected $incrementing = false;
+    protected $primaryKey = 'id';
 
     public $timestamps = false;
 }

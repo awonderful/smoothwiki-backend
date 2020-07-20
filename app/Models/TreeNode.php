@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Collection;
 use App\Libraries\Util;
+use App\Exceptions\TreeUpdatedException;
 
 class TreeNode extends Model
 {
@@ -15,7 +16,7 @@ class TreeNode extends Model
     protected $table = 'tree_node';
     protected $primaryKey = 'id';
 
-    protected $fillable = ['pid', 'title', 'pos', 'group_read', 'group_write', 'other_read', 'other_write', 'guest_read', 'guest_write'];
+    protected $fillable = ['pid', 'title', 'pos', 'type', 'group_read', 'group_write', 'other_read', 'other_write', 'guest_read', 'guest_write'];
 
     public static function getNodes(int $spaceId, int $category, array $conditions = [], array $fields = ['*']): collection {
         return static::where('space_id', $spaceId)
@@ -145,7 +146,7 @@ class TreeNode extends Model
             }
 
             return [
-                'id' => $treeNode->id,
+                'nodeId' => $treeNode->id,
                 'treeVersion' => $newTreeVersion,
             ];
         });
@@ -165,6 +166,7 @@ class TreeNode extends Model
 
         $affectedRows = static::where('space_id', $spaceId)
             ->where('category', $category)
+            ->where('id', $nodeId)
             ->where('pid', '>', 0)
             ->where('deleted', 0)
             ->update([

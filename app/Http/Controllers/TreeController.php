@@ -71,7 +71,7 @@ class TreeController extends Controller {
             $rs = $service->appendChildNode($spaceId, $category, $treeVersion, $pid, $title);
 
             return Result::data([
-              'id' => $rs['id'],
+              'nodeId' => $rs['nodeId'],
               'treeVersion' => $rs['treeVersion'],
             ]);
         } catch (TreeUpdatedException $e) {

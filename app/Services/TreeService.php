@@ -54,7 +54,7 @@ class TreeService {
      * @throws TreeNotExistException
      */
     public function getTree(int $spaceId, int $category): array {
-        $rows = TreeNode::getNodes($spaceId, $category, ['id', 'pid', 'space_id', 'category', 'title', 'group_read', 'group_write', 'guest_read', 'guest_write']);
+        $rows = TreeNode::getNodes($spaceId, $category, ['id', 'pid', 'space_id', 'category', 'type', 'title', 'group_read', 'group_write', 'guest_read', 'guest_write']);
         if ($rows->isEmpty()) {
             throw new TreeNotExistException();
         }
@@ -73,6 +73,7 @@ class TreeService {
         $tree = [
             'spaceId'  => $root->space_id,
             'category' => $root->category,
+            'type'     => $root->type,
             'id'       => $root->id,
             'pid'      => 0,
             'title'    => $root->title,
@@ -96,6 +97,7 @@ class TreeService {
                     $child = [
                         'spaceId'  => $childNode->space_id,
                         'category' => $childNode->category,
+                        'type'     => $childNode->type,
                         'id'       => $childNode->id,
                         'pid'      => $childNode->pid,
                         'title'    => $childNode->title,
@@ -130,7 +132,7 @@ class TreeService {
      *      ]
      * @throws TreeUpdatedException
      */
-    public function appendChildNode(int $spaceId, int $category, string $treeVersion, int $pid, string $title): array {
+    public function appendChildNode(int $spaceId, int $category, string $treeVersion, int $type, int $pid, string $title): array {
         $parentNode = TreeNode::getNodeById($spaceId, $category, $pid);
         if (empty($parentNode)) {
             throw new TreeUpdatedException();
@@ -140,6 +142,7 @@ class TreeService {
         $node = [
             'pid'          => $pid,
             'title'        => $title,
+            'type'         => $type,
             'group_read'   => $parentNode->group_read,
             'group_write'  => $parentNode->group_write,
             'other_read'   => $parentNode->other_read,

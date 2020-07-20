@@ -11,9 +11,8 @@ return [
 		'TRASH'        => 2, //回收站
 	],
 	'TreeNodeType'     => [  //树结点类型
-		'ROOT'         => 1, //根结点
-		'DIRECTORY'    => 2, //文件夹
-		'ARTICLE_PAGE' => 3, //普通文档页
+		'ARTICLE'      => 0, //普通文档页
+		'DISCUSSTION'  => 1, //讨论页
 	],
 	'ArticleType'      => [  //文档类型
 		'ATTACHMENT'   => 1, //附件
