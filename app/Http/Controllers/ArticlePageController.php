@@ -65,27 +65,31 @@ class ArticlePageController extends Controller {
             'prevArticleId' => ['required', 'integer', 'min:0'],
         ]);
 
-        $spaceId       = $request->input('spaceId');
-        $nodeId        = $request->input('nodeId');
-        $type          = $request->input('type');
-        $title         = $request->input('title');
-        $body          = $request->input('body');
-        $search        = $request->input('search');
-        $prevArticleId = $request->input('prevArticleId');
+        try {
+            $spaceId       = $request->input('spaceId');
+            $nodeId        = $request->input('nodeId');
+            $type          = $request->input('type');
+            $title         = $request->input('title');
+            $body          = $request->input('body');
+            $search        = $request->input('search');
+            $prevArticleId = $request->input('prevArticleId');
 
-        $article = [
-            'type'   => $type,
-            'title'  => $title,
-            'body'   => $body,
-            'search' => $search,
-        ];
+            $article = [
+                'type'   => $type,
+                'title'  => $title,
+                'body'   => $body,
+                'search' => $search,
+            ];
 
-        $service = new ArticlePageService();
-        $article = $service->addArticle($spaceId, $nodeId, $article, $prevArticleId);
-        return Result::data([
-            'id'      => $article->id,
-            'version' => $article->version,
-        ]);
+            $service = new ArticlePageService();
+            $article = $service->addArticle($spaceId, $nodeId, $article, $prevArticleId);
+            return Result::data([
+                'id'      => $article->id,
+                'version' => $article->version,
+            ]);
+         } catch (PageNotExistException $e) {
+            return Result::error('PAGE_NOT_EXIST');
+         }
     }
 
     public function updateArticle(Request $request) {
@@ -120,6 +124,8 @@ class ArticlePageController extends Controller {
                 'version' => $version,
             ]);
 
+        } catch (PageNotExistException $e) {
+            return Result::error('PAGE_NOT_EXIST');
         } catch (ArticleUpdatedException $e) {
             return Result::error('ARTICLE_UPDATED');
         }
@@ -144,6 +150,8 @@ class ArticlePageController extends Controller {
 
             return Result::succ();
 
+        } catch (PageNotExistException $e) {
+            return Result::error('PAGE_NOT_EXIST');
         } catch (PageUpdatedException $e) {
             return Result::error('PAGE_UPDATED');
         }

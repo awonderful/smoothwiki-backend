@@ -4,7 +4,7 @@ namespace App\Exceptions;
 
 use Exception;
 
-class UnknownException extends Exception
+class UnfinishedSavingException extends Exception
 {
     //
 }

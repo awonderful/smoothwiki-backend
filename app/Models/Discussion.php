@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Collection;
 use App\Libraries\Util;
-use App\Exceptions\UnknownException;
+use App\Exceptions\UnfinishedSavingException;
 use App\Exceptions\ArticleUpdatedException;
 
 class Discussion extends Model
@@ -155,7 +155,7 @@ class Discussion extends Model
                     ]);
 
                 if ($affectedRows != 1) {
-                    throw new UnknownException();
+                    throw new UnfinishedSavingException();
                 }
             }
 

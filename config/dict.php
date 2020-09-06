@@ -1,23 +1,36 @@
 <?php
 
 return [
-	'SpaceType'        => [  //空间类型
-		'PERSONAL'     => 1, //个人
-		'GROUP'        => 2, //团体
-		'PROJECT'      => 3, //项目
+	'SpaceType'         => [  //空间类型
+		'PERSON'        => 1, //个人
+		'GROUP'         => 2, //团队
+		'PROJECT'       => 3, //项目
 	],
-	'TreeNodeCategory' => [  //树结点分类
-		'MAIN'         => 1, //空间主树
-		'TRASH'        => 2, //回收站
+	'SpaceMemberType'   => [  //空间成员类型
+		'PERSON'        => 1, //个人
+		'GROUP'         => 2, //团队
 	],
-	'TreeNodeType'     => [  //树结点类型
-		'ARTICLE'      => 0, //普通文档页
-		'DISCUSSTION'  => 1, //讨论页
+	'SpaceMemberRole'   => [  //空间成员角色类型
+		'ADMIN'         => 1, //管理员
+		'ORDINARY'      => 2, //普通成员
 	],
-	'ArticleType'      => [  //文档类型
-		'ATTACHMENT'   => 1, //附件
-		'MARKDOWN'     => 2, //markdown
-        'RICHTEXT'     => 3, //富文本
-        'API'          => 4, //API
+	'SpaceMemberStatus' => [
+		'PENDING'       => 1, //审核中
+		'APPROVED'      => 2, //通过
+		'DENIED'        => 3, //拒绝
+	],
+	'TreeNodeCategory'  => [  //树结点归属
+		'MAIN'          => 1, //空间主树
+		'TRASH'         => 2, //回收站
+	],
+	'TreeNodeType'      => [  //树结点类型
+		'ARTICLE'       => 0, //普通文档页
+		'DISCUSSTION'   => 1, //讨论页
+	],
+	'ArticleType'       => [  //文档类型
+		'ATTACHMENT'    => 1, //附件
+		'MARKDOWN'      => 2, //markdown
+        'RICHTEXT'      => 3, //富文本
+        'API'           => 4, //API
 	],
 ];

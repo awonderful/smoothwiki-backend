@@ -113,7 +113,7 @@ class TreeNode extends Model
      *          'id' => ...,
      *          'treeVersion' => ...
      *      ]
-     * @throws IllegalOperationException, TreeUpdatedException, UnkonwnException
+     * @throws IllegalOperationException, TreeUpdatedException, UnfinishedSavingException
      */
     public static function addChildNode(int $spaceId, int $category, string $treeVersion, array $node): array {
         if ($node['pid'] <= 0) {
@@ -128,7 +128,7 @@ class TreeNode extends Model
             $treeNode->fill($node);
             $succ = $treeNode->save();
             if (!$succ) {
-                throw new UnknownException();
+                throw new UnfinishedSavingException();
             }
 
             $newTreeVersion = util::version();
@@ -174,7 +174,7 @@ class TreeNode extends Model
             ]);
 
         if ($affectedRows == 0) {
-            throw new UnknownException();
+            throw new UnfinishedSavingException();
         }
 
         return $newVersion;

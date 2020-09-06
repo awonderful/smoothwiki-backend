@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Collection;
 use App\Libraries\Util;
-use App\Exceptions\UnknownException;
+use App\Exceptions\UnfinishedSavingException;
 use App\Exceptions\ArticleUpdatedException;
 use App\Exceptions\PageUpdatedException;
 
@@ -42,19 +42,53 @@ class Article extends Model
                     ->max('pos');
     }
 
+    /**
+     * update an article, after making a backup in the table 'article_history', and then regenerate a new version.
+     * @param int $spaceId
+     * @param int $nodeId
+     * @param int $author
+     * @param array $article
+     *  [
+     *      'title'  => ...,
+     *      'body'   => ...,
+     *      'search' => ...
+     *  ]
+     * @return Article
+     * @throws UnfinishedSavingException
+     */
     public static function addArticle(int $spaceId, int $nodeId, array $article, int $author): Article {
-            $newArticle = new Article();
-            $newArticle->space_id = $spaceId;
-            $newArticle->node_id  = $nodeId;
-            $newArticle->author   = $author;
-            $newArticle->pos      = 0;
-            $newArticle->version  = Util::version();
-            $newArticle->fill($article);
-            $newArticle->save();
+        $newArticle = new Article();
+        $newArticle->space_id = $spaceId;
+        $newArticle->node_id  = $nodeId;
+        $newArticle->author   = $author;
+        $newArticle->pos      = 0;
+        $newArticle->version  = Util::version();
+        $newArticle->fill($article);
+        
+        $succ = $newArticle->save();
+        if (!$succ) {
+            throw new UnfinishedSavingException;
+        }
 
-            return $newArticle;
+        return $newArticle;
     }
 
+    /**
+     * after copying the article into the table 'article_history', update it, and then generate a new version.
+     * @param int $spaceId
+     * @param int $nodeId
+     * @param int $articleId
+     * @param int $articleVersion
+     * @param int $author
+     * @param array $article
+     *  [
+     *      'title'  => ...,
+     *      'body'   => ...,
+     *      'search' => ...
+     *  ]
+     * @return string the new version of the article
+     * @throws ArticleUpdatedException, UnfinishedSavingException
+     */
     public static function updateArticle(int $spaceId, int $nodeId, int $articleId, string $articleVersion, int $author, array $article): string {
         return DB::transaction(function() use ($spaceId, $nodeId, $articleId, $articleVersion, $author, $article) {
             $curArticle = static::where('space_id', $spaceId)
@@ -77,7 +111,7 @@ class Article extends Model
             $articleHistory->ctime      = $curArticle->ctime;
             $succ = $articleHistory->save();
             if (!$succ) {
-                throw new UnknownException();
+                throw new UnfinishedSavingException();
             }
 
             $newVersion = Util::version();
@@ -101,7 +135,19 @@ class Article extends Model
         });
     }
 
-    public static function modifyArticlePoses(int $spaceId, int $nodeId, array $poses) {
+    /**
+     * modify articles' positions.
+     * @param int $spaceId
+     * @param int $nodeId
+     * @param array $poses
+     *  [
+     *      id1 => pos1,
+     *      id2 => pos2,
+     *      ...
+     *  ]
+     * @return void
+     */
+    public static function modifyArticlePoses(int $spaceId, int $nodeId, array $poses): void {
         return DB::transaction(function() use ($spaceId, $nodeId, $poses) {
             foreach ($poses as $articleId => $pos) {
                 $affectedRows = static::where('space_id', $spaceId)

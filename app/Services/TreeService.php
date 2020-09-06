@@ -5,7 +5,7 @@ namespace App\Services;
 use App\Models\TreeNode;
 use App\Exceptions\TreeUpdatedException;
 use App\Exceptions\TreeNotExistException;
-use App\Exceptions\UnknownException;
+use App\Exceptions\UnfinishedSavingException;
 
 class TreeService {
 
@@ -169,7 +169,7 @@ class TreeService {
      * @param int $nodeId
      * @param string $newTitle
      * @return string the new version string of the tree
-     * @throws TreeUpdatedException, IllegalOperationException, UnknownException
+     * @throws TreeUpdatedException, IllegalOperationException, UnfinishedSavingException
      */
     public function renameNode(int $spaceId, int $category, string $treeVersion, int $nodeId, string $newTitle): string {
         $node = TreeNode::getNodeById($spaceId, $category, $nodeId);

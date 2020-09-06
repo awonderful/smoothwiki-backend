@@ -7,7 +7,7 @@ use App\Models\ArticleHistory;
 use App\Models\TreeNode;
 use App\Exceptions\PageUpdatedException;
 use App\Exceptions\TreeNotExistException;
-use App\Exceptions\UnknownException;
+use App\Exceptions\UnfinishedSavingException;
 use Illuminate\Database\Eloquent\Collection;
 
 class ArticlePageService {
@@ -16,6 +16,22 @@ class ArticlePageService {
         return Article::getArticles($spaceId, $nodeId);
     }
 
+    /**
+     * get the articles' versions
+     * @param int $spaceId
+     * @param int $nodeId
+     * @return array
+     *      [
+     *          [
+     *              'id'      =>  ...,
+     *              'version' =>  ...
+     *          ],
+     *          [
+     *              ...
+     *          ],
+     *          ...
+     *      ]
+     */
     public function getVersions(int $spaceId, int $nodeId): array {
         return Article::getArticles($spaceId, $nodeId, ['id', 'version'])->toArray();
     }
@@ -29,13 +45,37 @@ class ArticlePageService {
         return $newArticle;
     }
 
+    /**
+     * update an article
+     * @param int $spaceId
+     * @param int $nodeId
+     * @param int $articleId
+     * @param string $articleVersion
+     * @param array $article
+     *      [
+     *          'title'  => ...,
+     *          'body'   => ...,
+     *          'search' => ...
+     *      ]
+     * @return string the new version of the article
+     * @throws ArticleUpdatedException, UnfinishedSavingException
+     */
     public function updateArticle(int $spaceId, int $nodeId, int $articleId, string $articleVersion, array $article): string {
         $author = 0;
 
         return Article::updateArticle($spaceId, $nodeId, $articleId, $articleVersion, $author, $article);
     }
 
-    public function moveArticle(int $spaceId, int $nodeId, $articleId, $prevArticleId): bool {
+    /**
+     * move an article
+     * @param int $spaceId
+     * @param int $nodeId
+     * @param int $articleId
+     * @param int $prevArticleId
+     * @return void
+     * @throws PageUpdatedException
+     */
+    public function moveArticle(int $spaceId, int $nodeId, $articleId, $prevArticleId): void {
         if ($articleId == $prevArticleId) {
             throw new IllegalOperationException();
         }
@@ -50,7 +90,7 @@ class ArticlePageService {
                 $prevArticle = $article;
                 $prevArticleIndex = $idx;
             } elseif ($article->id == $articleId) {
-                $opArticleExist = true;
+                $opArticleExist;
             }
         }
 
@@ -64,7 +104,7 @@ class ArticlePageService {
                 $newPos = $articles[0]->pos - 1000;
                 Article::modifyArticlePoses($spaceId, $nodeId, [$articleId => $newPos]);
             }
-            return true;
+            return;
         }
 
         //to be the last article
@@ -73,13 +113,13 @@ class ArticlePageService {
                 $newPos = $articles[$prevArticleIndex]->pos + 1000;
                 Article::modifyArticlePoses($spaceId, $nodeId, [$articleId => $newPos]);
             }
-            return true;
+            return;
         }
 
         $prevArticle = $articles[$prevArticleIndex];
         $nextArticle = $articles[$prevArticleIndex + 1];
         if ($nextArticle->id == $articleId) {
-            return true;
+            return;
         }
 
         $prevPos = $prevArticle->pos;
@@ -97,6 +137,6 @@ class ArticlePageService {
             Article::modifyArticlePoses($spaceId, $nodeId, $modifyPoses);
         }
 
-        return true;
+        return;
     }
 }
