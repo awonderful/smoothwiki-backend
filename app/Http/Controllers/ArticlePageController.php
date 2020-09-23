@@ -14,15 +14,17 @@ class ArticlePageController extends Controller {
     public function getPage(Request $request) {
         $request->validate([
             'spaceId'       => ['required', 'integer', 'min:1'],
+            'treeId'        => ['required', 'integer', 'min:1'],
             'nodeId'        => ['required', 'integer', 'min:1'],
         ]);
 
         try {
             $spaceId       = $request->input('spaceId');
+            $treeId        = $request->input('treeId');
             $nodeId        = $request->input('nodeId');
 
             $service = new ArticlePageService();
-            $articles = $service->getArticles($spaceId, $nodeId);
+            $articles = $service->getArticles($spaceId, $treeId, $nodeId);
             return Result::data([
                 'articles' => $articles->all(),
             ]);
@@ -36,15 +38,17 @@ class ArticlePageController extends Controller {
     public function getPageVersion(Request $request) {
          $request->validate([
             'spaceId'     => ['required', 'integer', 'min:1'],
+            'treeId'      => ['required', 'integer', 'min:1'],
             'nodeId'      => ['required', 'integer', 'min:1'],
         ]);
 
         try {
             $spaceId    = $request->input('spaceId');
+            $treeId     = $request->input('treeId');
             $nodeId     = $request->input('nodeId');
 
             $service = new ArticlePageService();
-            $version = $service->getVersions($spaceId, $nodeId);
+            $version = $service->getVersions($spaceId, $treeId, $nodeId);
             return Result::data([
                 'version' => $version,
             ]);
@@ -57,6 +61,7 @@ class ArticlePageController extends Controller {
     public function addArticle(Request $request) {
          $request->validate([
             'spaceId'       => ['required', 'integer', 'min:1'],
+            'treeId'        => ['required', 'integer', 'min:1'],
             'nodeId'        => ['required', 'integer', 'min:1'],
             'type'          => ['required', 'integer', 'in:'.implode(',', config('dict.ArticleType'))],
             'title'         => ['required', 'max:200'],
@@ -67,6 +72,7 @@ class ArticlePageController extends Controller {
 
         try {
             $spaceId       = $request->input('spaceId');
+            $treeId        = $request->input('treeId');
             $nodeId        = $request->input('nodeId');
             $type          = $request->input('type');
             $title         = $request->input('title');
@@ -82,7 +88,7 @@ class ArticlePageController extends Controller {
             ];
 
             $service = new ArticlePageService();
-            $article = $service->addArticle($spaceId, $nodeId, $article, $prevArticleId);
+            $article = $service->addArticle($spaceId, $treeId, $nodeId, $article, $prevArticleId);
             return Result::data([
                 'id'      => $article->id,
                 'version' => $article->version,
@@ -95,6 +101,7 @@ class ArticlePageController extends Controller {
     public function updateArticle(Request $request) {
          $request->validate([
             'spaceId'        => ['required', 'integer', 'min:1'],
+            'treeId'         => ['required', 'integer', 'min:1'],
             'nodeId'         => ['required', 'integer', 'min:1'],
             'articleId'      => ['required', 'integer', 'min:1'],
             'articleVersion' => ['required', 'max:100'],
@@ -105,6 +112,7 @@ class ArticlePageController extends Controller {
 
         try {
             $spaceId        = $request->input('spaceId');
+            $treeId         = $request->input('treeId');
             $nodeId         = $request->input('nodeId');
             $articleId      = $request->input('articleId');
             $articleVersion = $request->input('articleVersion');
@@ -119,7 +127,7 @@ class ArticlePageController extends Controller {
             ];
 
             $service = new ArticlePageService();
-            $version = $service->updateArticle($spaceId, $nodeId, $articleId, $articleVersion, $article);
+            $version = $service->updateArticle($spaceId, $treeId, $nodeId, $articleId, $articleVersion, $article);
             return Result::data([
                 'version' => $version,
             ]);
@@ -134,6 +142,7 @@ class ArticlePageController extends Controller {
     public function moveArticle(Request $request) {
          $request->validate([
             'spaceId'       => ['required', 'integer', 'min:1'],
+            'treeId'        => ['required', 'integer', 'min:1'],
             'nodeId'        => ['required', 'integer', 'min:1'],
             'articleId'     => ['required', 'integer', 'min:1'],
             'prevArticleId' => ['required', 'integer', 'min:0'],
@@ -141,12 +150,13 @@ class ArticlePageController extends Controller {
 
         try {
             $spaceId        = $request->input('spaceId');
+            $treeId         = $request->input('treeId');
             $nodeId         = $request->input('nodeId');
             $articleId      = $request->input('articleId');
             $prevArticleId  = $request->input('prevArticleId');
 
             $service = new ArticlePageService();
-            $article = $service->moveArticle($spaceId, $nodeId, $articleId, $prevArticleId);
+            $article = $service->moveArticle($spaceId, $treeId, $nodeId, $articleId, $prevArticleId);
 
             return Result::succ();
 

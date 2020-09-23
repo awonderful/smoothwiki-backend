@@ -20,23 +20,26 @@ class Article extends Model
 
     protected $fillable = ['type', 'title', 'body', 'search', 'ext'];
 
-    public static function getArticles(int $spaceId, int $nodeId, $fields = ['*']): Collection {
+    public static function getArticles(int $spaceId, int $treeId, int $nodeId, $fields = ['*']): Collection {
         return static::where('space_id', $spaceId)
+                    ->where('tree_id', $treeId)
                     ->where('node_id', $nodeId)
                     ->where('deleted', 0)
                     ->orderBy('pos', 'asc')
                     ->get($fields);
     }
 
-    public static function getArticleById(int $spaceId, int $nodeId, int $articleId): Article {
+    public static function getArticleById(int $spaceId, int $treeId, int $nodeId, int $articleId): Article {
         return static::where('space_id', $spaceId)
+                    ->where('tree_id', $treeId)
                     ->where('node_id', $nodeId)
                     ->where('id', $articleId)
                     ->where('deleted', 0);
     }
 
-    public static function getMaxArticlePos(int $spaceId, int $nodeId): ?int {
+    public static function getMaxArticlePos(int $spaceId, int $treeId, int $nodeId): ?int {
         return static::where('space_id', $spaceId)
+                    ->where('tree_id', $treeId)
                     ->where('node_id', $nodeId)
                     ->where('deleted', 0)
                     ->max('pos');
@@ -45,6 +48,7 @@ class Article extends Model
     /**
      * update an article, after making a backup in the table 'article_history', and then regenerate a new version.
      * @param int $spaceId
+     * @param int $treeId
      * @param int $nodeId
      * @param int $author
      * @param array $article
@@ -56,9 +60,10 @@ class Article extends Model
      * @return Article
      * @throws UnfinishedSavingException
      */
-    public static function addArticle(int $spaceId, int $nodeId, array $article, int $author): Article {
+    public static function addArticle(int $spaceId, int $treeId, int $nodeId, array $article, int $author): Article {
         $newArticle = new Article();
         $newArticle->space_id = $spaceId;
+        $newArticle->tree_id  = $treeId;
         $newArticle->node_id  = $nodeId;
         $newArticle->author   = $author;
         $newArticle->pos      = 0;
@@ -76,6 +81,7 @@ class Article extends Model
     /**
      * after copying the article into the table 'article_history', update it, and then generate a new version.
      * @param int $spaceId
+     * @param int $treeId
      * @param int $nodeId
      * @param int $articleId
      * @param int $articleVersion
@@ -89,9 +95,10 @@ class Article extends Model
      * @return string the new version of the article
      * @throws ArticleUpdatedException, UnfinishedSavingException
      */
-    public static function updateArticle(int $spaceId, int $nodeId, int $articleId, string $articleVersion, int $author, array $article): string {
-        return DB::transaction(function() use ($spaceId, $nodeId, $articleId, $articleVersion, $author, $article) {
+    public static function updateArticle(int $spaceId, int $treeId, int $nodeId, int $articleId, string $articleVersion, int $author, array $article): string {
+        return DB::transaction(function() use ($spaceId, $treeId, $nodeId, $articleId, $articleVersion, $author, $article) {
             $curArticle = static::where('space_id', $spaceId)
+                ->where('tree_id', $treeId)
                 ->where('node_id', $nodeId)
                 ->where('id', $articleId)
                 ->where('version', $articleVersion)
@@ -116,6 +123,7 @@ class Article extends Model
 
             $newVersion = Util::version();
             $affectedRows = static::where('space_id', $spaceId)
+            ->where('tree_id', $treeId)
             ->where('node_id', $nodeId)
             ->where('id', $articleId)
             ->where('version', $articleVersion)
@@ -138,6 +146,7 @@ class Article extends Model
     /**
      * modify articles' positions.
      * @param int $spaceId
+     * @param int $treeId
      * @param int $nodeId
      * @param array $poses
      *  [
@@ -147,10 +156,11 @@ class Article extends Model
      *  ]
      * @return void
      */
-    public static function modifyArticlePoses(int $spaceId, int $nodeId, array $poses): void {
-        return DB::transaction(function() use ($spaceId, $nodeId, $poses) {
+    public static function modifyArticlePoses(int $spaceId, int $treeId, int $nodeId, array $poses): void {
+        DB::transaction(function() use ($spaceId, $treeId, $nodeId, $poses) {
             foreach ($poses as $articleId => $pos) {
                 $affectedRows = static::where('space_id', $spaceId)
+                    ->where('tree_id', $treeId)
                     ->where('node_id', $nodeId)
                     ->where('id', $articleId)
                     ->where('deleted', 0)

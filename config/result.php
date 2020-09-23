@@ -15,4 +15,6 @@ return [
 	'ARTICLE_UPDATED' => 3001,
 	'PAGE_UPDATED'    => 3002,
 	'PAGE_NOT_EXIST'  => 3003,
+
+	'SPACE_MENU_NOT_EXIST' => 4001,
 ];

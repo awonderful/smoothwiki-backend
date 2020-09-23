@@ -11,14 +11,15 @@ class SpaceMember extends Model
 
     protected $table = 'space_member';
     protected $primaryKey = ['space_id', 'member_id'];
-    protected $incrementing = false;
+    public    $incrementing = false;
 
-    public static function addMember(int $spaceId, int $memberType, int $memberId, $role) {
+    public static function addMember(int $spaceId, int $memberType, int $memberId, int $role, int $status): void {
         $member = new SpaceMember();
         $member->space_id    = $spaceId;
         $member->member_type = $memberType;
         $member->member_id   = $memberId;
         $member->role        = $role;
+        $member->status      = $status;
         $succ = $member->save();
         if (!$succ) {
             throw new UnfinishedSavingException();

@@ -14,15 +14,15 @@ class TreeController extends Controller {
     public function getTree(Request $request) {
         $request->validate([
             'spaceId'     => ['required', 'integer', 'min:1'],
-            'category'    => ['required', 'integer', 'in:'.implode(',', config('dict.TreeNodeCategory'))],
+            'treeId'      => ['required', 'integer', 'min:1'],
         ]);
 
         try {
-            $spaceId  = $request->input('spaceId');
-            $category = $request->input('category');
+            $spaceId = $request->input('spaceId');
+            $treeId = $request->input('treeId');
 
             $service = new TreeService();
-            $tree = $service->getTree($spaceId, $category);
+            $tree = $service->getTree($spaceId, $treeId);
 
             return Result::data($tree);
         } catch (TreeNotExistException $e) {
@@ -33,15 +33,15 @@ class TreeController extends Controller {
     public function getTreeVersion(Request $request) {
          $request->validate([
             'spaceId'     => ['required', 'integer', 'min:1'],
-            'category'    => ['required', 'integer', 'in:'.implode(',', config('dict.TreeNodeCategory'))],
+            'treeId'      => ['required', 'integer', 'min:1'],
         ]);
 
         try {
-            $spaceId  = $request->input('spaceId');
-            $category = $request->input('category');
+            $spaceId = $request->input('spaceId');
+            $treeId = $request->input('treeId');
 
             $service = new TreeService();
-            $treeVersion = $service->getTreeVersion($spaceId, $category);
+            $treeVersion = $service->getTreeVersion($spaceId, $treeId);
 
             return Result::data([
                 'treeVersion' => $treeVersion,
@@ -54,21 +54,23 @@ class TreeController extends Controller {
     public function appendChildNode(Request $request) {
         $request->validate([
             'spaceId'     => ['required', 'integer', 'min:1'],
-            'category'    => ['required', 'integer', 'in:'.implode(',', config('dict.TreeNodeCategory'))],
+            'treeId'      => ['required', 'integer', 'min:1'],
             'treeVersion' => ['required', 'max:40'],
+            'type'        => ['required', 'integer', 'min:0'],
             'pid'         => ['required', 'integer', 'min:1'],
             'title'       => ['required', 'max:100'],
         ]);
 
         try {
             $spaceId     = $request->input('spaceId');
-            $category    = $request->input('category');
+            $treeId      = $request->input('treeId');
             $treeVersion = $request->input('treeVersion');
+            $type        = $request->input('type');
             $pid         = $request->input('pid');
             $title       = $request->input('title');
 
             $service = new TreeService();
-            $rs = $service->appendChildNode($spaceId, $category, $treeVersion, $pid, $title);
+            $rs = $service->appendChildNode($spaceId, $treeId, $treeVersion, $type, $pid, $title);
 
             return Result::data([
               'nodeId' => $rs['nodeId'],
@@ -82,7 +84,7 @@ class TreeController extends Controller {
     public function renameNode(Request $request) {
          $request->validate([
             'spaceId'     => ['required', 'integer', 'min:1'],
-            'category'    => ['required', 'integer', 'in:'.implode(',', config('dict.TreeNodeCategory'))],
+            'treeId'      => ['required', 'integer', 'min:1'],
             'treeVersion' => ['required', 'max:40'],
             'nodeId'      => ['required', 'integer', 'min:1'],
             'newTitle'    => ['required', 'max:100'],
@@ -90,13 +92,13 @@ class TreeController extends Controller {
 
         try {
             $spaceId     = $request->input('spaceId');
-            $category    = $request->input('category');
+            $treeId      = $request->input('treeId');
             $treeVersion = $request->input('treeVersion');
             $nodeId      = $request->input('nodeId');
             $newTitle    = $request->input('newTitle');
 
             $service = new TreeService();
-            $newTreeVersion = $service->renameNode($spaceId, $category, $treeVersion, $nodeId, $newTitle);
+            $newTreeVersion = $service->renameNode($spaceId, $treeId, $treeVersion, $nodeId, $newTitle);
 
             return Result::data([
                 'treeVersion' => $newTreeVersion,
@@ -109,7 +111,7 @@ class TreeController extends Controller {
     public function moveNode(Request $request) {
         $request->validate([
             'spaceId'     => ['required', 'integer', 'min:1'],
-            'category'    => ['required', 'integer', 'in:'.implode(',', config('dict.TreeNodeCategory'))],
+            'treeId'      => ['required', 'integer', 'min:1'],
             'treeVersion' => ['required', 'max:40'],
             'nodeId'      => ['required', 'integer', 'min:1'],
             'newPid'      => ['required', 'integer', 'min:1'],
@@ -118,14 +120,14 @@ class TreeController extends Controller {
 
         try {
             $spaceId     = $request->input('spaceId');
-            $category    = $request->input('category');
+            $treeId      = $request->input('treeId');
             $treeVersion = $request->input('treeVersion');
             $nodeId      = $request->input('nodeId');
             $newPid      = $request->input('newPid');
             $newLocation = $request->input('newLocation');
 
             $service = new TreeService();
-            $newTreeVersion = $service->moveNode($spaceId, $category, $treeVersion, $nodeId, $newPid, $newLocation);
+            $newTreeVersion = $service->moveNode($spaceId, $treeId, $treeVersion, $nodeId, $newPid, $newLocation);
 
             return Result::data([
                 'treeVersion' => $newTreeVersion,

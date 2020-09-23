@@ -16,35 +16,35 @@ class TreeNode extends Model
     protected $table = 'tree_node';
     protected $primaryKey = 'id';
 
-    protected $fillable = ['pid', 'title', 'pos', 'type', 'group_read', 'group_write', 'other_read', 'other_write', 'guest_read', 'guest_write'];
+    protected $fillable = ['pid', 'title', 'pos', 'type'];
 
-    public static function getNodes(int $spaceId, int $category, array $conditions = [], array $fields = ['*']): collection {
+    public static function getNodes(int $spaceId, int $treeId, array $conditions = [], array $fields = ['*']): collection {
         return static::where('space_id', $spaceId)
-            ->where('category', $category)
+            ->where('tree_id', $treeId)
             ->where('deleted', 0)
             ->orderby('pos', 'asc')
             ->get($fields);
     }
 
-    public static function getNodeById(int $spaceId, int $category, int $nodeId): ?TreeNode {
+    public static function getNodeById(int $spaceId, int $treeId, int $nodeId): ?TreeNode {
          return static::where('space_id', $spaceId)
-            ->where('category', $category)
+            ->where('tree_id', $treeId)
             ->where('deleted', 0)
             ->where('id', $nodeId)
             ->first();
     }
 
-    public static function getRootNode(int $spaceId, int $category): ?TreeNode {
+    public static function getRootNode(int $spaceId, int $treeId): ?TreeNode {
         return static::where('space_id', $spaceId)
-            ->where('category', $category)
+            ->where('tree_id', $treeId)
             ->where('pid', 0)
             ->where('deleted', 0)
             ->first();
     }
 
-    public static function getMaxChildPos(int $spaceId, int $category, int $pid): ?int {
+    public static function getMaxChildPos(int $spaceId, int $treeId, int $pid): ?int {
         return static::where('space_id', $spaceId)
-                    ->where('category', $category)
+                    ->where('tree_id', $treeId)
                     ->where('pid', $pid)
                     ->where('deleted', 0)
                     ->max('pos');
@@ -53,7 +53,7 @@ class TreeNode extends Model
     /**
      * modify some nodes' attributes, and regenerate the root node's version in the meantime.
      * @param int $spaceId
-     * @param int $category
+     * @param int $treeId
      * @param string $treeVersion
      * @param array $updates
      *      [
@@ -70,11 +70,11 @@ class TreeNode extends Model
      * @return string the new version string of the tree
      * @throws TreeUpdatedException
      */
-    public static function modifyNodes(int $spaceId, int $category, string $treeVersion, array $updates): string {
-        return DB::transaction(function() use ($spaceId, $category, $treeVersion, $updates) {
+    public static function modifyNodes(int $spaceId, int $treeId, string $treeVersion, array $updates): string {
+        return DB::transaction(function() use ($spaceId, $treeId, $treeVersion, $updates) {
             foreach ($updates as $id => $update) {
                 $affectedRows = static::where('space_id', $spaceId)
-                    ->where('category', $category)
+                    ->where('tree_id', $treeId)
                     ->where('id', $id)
                     ->where('deleted', 0)
                     ->update($update);
@@ -86,7 +86,7 @@ class TreeNode extends Model
 
             $newTreeVersion = util::version();
             $affectedRows = static::where('space_id', $spaceId)
-                ->where('category', $category)
+                ->where('tree_id', $treeId)
                 ->where('pid', 0)
                 ->where('version', $treeVersion)
                 ->where('deleted', 0)
@@ -105,7 +105,7 @@ class TreeNode extends Model
     /**
      * add a non-root node, and regenerate the root node's version string in the meantime.
      * @param int $spaceId
-     * @param int $category
+     * @param int $treeId
      * @param string $treeVersion
      * @param array $node
      * @return array
@@ -115,15 +115,15 @@ class TreeNode extends Model
      *      ]
      * @throws IllegalOperationException, TreeUpdatedException, UnfinishedSavingException
      */
-    public static function addChildNode(int $spaceId, int $category, string $treeVersion, array $node): array {
+    public static function addChildNode(int $spaceId, int $treeId, string $treeVersion, array $node): array {
         if ($node['pid'] <= 0) {
             throw new IllegalOperationException();
         }
 
-        $rs = DB::transaction(function() use($spaceId, $category, $treeVersion, $node) {
+        $rs = DB::transaction(function() use($spaceId, $treeId, $treeVersion, $node) {
             $treeNode = new TreeNode();
             $treeNode->space_id = $spaceId;
-            $treeNode->category = $category;
+            $treeNode->tree_id  = $treeId;
             $treeNode->version  = Util::version();
             $treeNode->fill($node);
             $succ = $treeNode->save();
@@ -133,7 +133,7 @@ class TreeNode extends Model
 
             $newTreeVersion = util::version();
             $affectedRows = static::where('space_id', $spaceId)
-                ->where('category', $category)
+                ->where('tree_id', $treeId)
                 ->where('pid', 0)
                 ->where('version', $treeVersion)
                 ->where('deleted', 0)
@@ -157,15 +157,15 @@ class TreeNode extends Model
     /**
      * regenerate a non-root node's version
      * @param int $spaceId
-     * @param int $category
+     * @param int $treeId
      * @param int $nodeId
      * @return string the new version string
      */
-    public static function regenerateNodeVersion(int $spaceId, int $category, int $nodeId): string {
+    public static function regenerateNodeVersion(int $spaceId, int $treeId, int $nodeId): string {
         $newVersion = Util::version();
 
         $affectedRows = static::where('space_id', $spaceId)
-            ->where('category', $category)
+            ->where('tree_id', $treeId)
             ->where('id', $nodeId)
             ->where('pid', '>', 0)
             ->where('deleted', 0)
@@ -178,5 +178,27 @@ class TreeNode extends Model
         }
 
         return $newVersion;
+    }
+
+    /**
+     * create a root node
+     * @param int $spaceId
+     * @return int the id of the root node
+     */
+    public static function createRootNode(int $spaceId, int $treeId, string $title): int {
+        $treeNode = new TreeNode();
+        $treeNode->space_id = $spaceId;
+        $treeNode->tree_id  = $treeId;
+        $treeNode->title    = $title;
+        $treeNode->pid      = 0;
+        $treeNode->type     = 0;
+        $treeNode->version  = Util::version();
+        $succ = $treeNode->save();
+
+        if (!$succ) {
+            throw new UnfinishedSavingException();
+        }
+
+        return $treeNode->id;
     }
 }

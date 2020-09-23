@@ -34,5 +34,8 @@ Route::middleware([])->group(function () {
     Route::get ('article-page/get',            'ArticlePageController@getPage');
     Route::get ('article-page/version',        'ArticlePageController@getPageVersion');
 
-    Route::post('space/create', 'SpaceController@createSpace');
+    Route::get('space/create',     'SpaceController@createSpace');
+    Route::get('space/menu/create', 'SpaceController@createMenu');
+    Route::get('space/menu/remove', 'SpaceController@removeMenu');
+    Route::get('space/menu/rename', 'SpaceController@renameMenu');
 });

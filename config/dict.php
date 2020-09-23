@@ -19,13 +19,12 @@ return [
 		'APPROVED'      => 2, //通过
 		'DENIED'        => 3, //拒绝
 	],
-	'TreeNodeCategory'  => [  //树结点归属
-		'MAIN'          => 1, //空间主树
-		'TRASH'         => 2, //回收站
-	],
-	'TreeNodeType'      => [  //树结点类型
-		'ARTICLE'       => 0, //普通文档页
-		'DISCUSSTION'   => 1, //讨论页
+	'SpaceMenuType'     => [ //空间菜单指向的对像类型
+		'WIKI'          => 1, //wiki
+		'POST'			=> 2, //贴子
+		'DATABASE'      => 3, //数据库
+		'API'           => 4, //api
+		'LINK'          => 5, //链接
 	],
 	'ArticleType'       => [  //文档类型
 		'ATTACHMENT'    => 1, //附件

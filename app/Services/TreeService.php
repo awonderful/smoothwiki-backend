@@ -12,12 +12,12 @@ class TreeService {
     /**
      * get the version string of tree tree
      * @param int $spaceId
-     * @param int $category
+     * @param int $treeId
      * @return string the version string of the tree
      * @throws TreeNotExistException
      */
-    public function getTreeVersion(int $spaceId, int $category): string {
-        $rootNode = TreeNode::getRootNode($spaceId, $category);
+    public function getTreeVersion(int $spaceId, int $treeId): string {
+        $rootNode = TreeNode::getRootNode($spaceId, $treeId);
 
         if (empty($rootNode)) {
             throw new TreeNotExistException();
@@ -29,13 +29,12 @@ class TreeService {
     /**
      * get the tree
      * @param int $spaceId
-     * @param int $category
+     * @param int $treeId
      * @return array
      *   example:
      *      [
      *          'tree' => [
      *              'spaceId'   => 1,
-     *              'category'  => 1,
      *              'id'        => 100,
      *              'pid'       => 0,
      *              'title'     => 'ROOT',
@@ -53,8 +52,8 @@ class TreeService {
      *      ]
      * @throws TreeNotExistException
      */
-    public function getTree(int $spaceId, int $category): array {
-        $rows = TreeNode::getNodes($spaceId, $category, ['id', 'pid', 'space_id', 'category', 'type', 'title', 'group_read', 'group_write', 'guest_read', 'guest_write']);
+    public function getTree(int $spaceId, int $treeId): array {
+        $rows = TreeNode::getNodes($spaceId, $treeId, ['id', 'pid', 'tree_id', 'type', 'title']);
         if ($rows->isEmpty()) {
             throw new TreeNotExistException();
         }
@@ -71,8 +70,7 @@ class TreeService {
         $root = $pidMap[0][0];
         $treeVersion = $root->version;
         $tree = [
-            'spaceId'  => $root->space_id,
-            'category' => $root->category,
+            'spaceId'  => $root->tree_id,
             'type'     => $root->type,
             'id'       => $root->id,
             'pid'      => 0,
@@ -95,8 +93,7 @@ class TreeService {
                 $node['children'] = [];
                 foreach ($pidMap[$id] as $childNode) {
                     $child = [
-                        'spaceId'  => $childNode->space_id,
-                        'category' => $childNode->category,
+                        'spaceId'  => $childNode->tree_id,
                         'type'     => $childNode->type,
                         'id'       => $childNode->id,
                         'pid'      => $childNode->pid,
@@ -121,7 +118,7 @@ class TreeService {
     /**
      * append a child node to an existing node
      * @param int $spaceId
-     * @param int $category
+     * @param int $treeId
      * @param string $treeVersion
      * @param int $pid
      * @param string $title
@@ -132,47 +129,41 @@ class TreeService {
      *      ]
      * @throws TreeUpdatedException
      */
-    public function appendChildNode(int $spaceId, int $category, string $treeVersion, int $type, int $pid, string $title): array {
-        $parentNode = TreeNode::getNodeById($spaceId, $category, $pid);
+    public function appendChildNode(int $spaceId, int $treeId, string $treeVersion, int $type, int $pid, string $title): array {
+        $parentNode = TreeNode::getNodeById($spaceId, $treeId, $pid);
         if (empty($parentNode)) {
             throw new TreeUpdatedException();
         }
-        $maxChildPos = TreeNode::getMaxChildPos($spaceId, $category, $pid);
+        $maxChildPos = TreeNode::getMaxChildPos($spaceId, $treeId, $pid);
 
         $node = [
-            'pid'          => $pid,
-            'title'        => $title,
-            'type'         => $type,
-            'group_read'   => $parentNode->group_read,
-            'group_write'  => $parentNode->group_write,
-            'other_read'   => $parentNode->other_read,
-            'other_write'  => $parentNode->other_write,
-            'guest_read'   => $parentNode->guest_read,
-            'guest_write'  => $parentNode->guest_read,
-            'pos'          => empty($maxChildPos)
-                                ? 1000
-                                : $maxChildPos + 1000,
+            'pid'   => $pid,
+            'title' => $title,
+            'type'  => $type,
+            'pos'   => empty($maxChildPos)
+                        ? 1000
+                        : $maxChildPos + 1000,
         ];
-        $latestTreeVersion = $this->getTreeVersion($spaceId, $category);
+        $latestTreeVersion = $this->getTreeVersion($spaceId, $treeId);
         if ($latestTreeVersion != $treeVersion) {
             throw new TreeUpdatedException();
         }
 
-        return TreeNode::addChildNode($spaceId, $category, $treeVersion, $node);
+        return TreeNode::addChildNode($spaceId, $treeId, $treeVersion, $node);
     }
 
     /**
      * rename a node's title
      * @param int $spaceId
-     * @param int $category
+     * @param int $treeId
      * @param string $treeVersion
      * @param int $nodeId
      * @param string $newTitle
      * @return string the new version string of the tree
      * @throws TreeUpdatedException, IllegalOperationException, UnfinishedSavingException
      */
-    public function renameNode(int $spaceId, int $category, string $treeVersion, int $nodeId, string $newTitle): string {
-        $node = TreeNode::getNodeById($spaceId, $category, $nodeId);
+    public function renameNode(int $spaceId, int $treeId, string $treeVersion, int $nodeId, string $newTitle): string {
+        $node = TreeNode::getNodeById($spaceId, $treeId, $nodeId);
         if (empty($node)) {
             throw new TreeUpdatedException();
         }
@@ -181,7 +172,7 @@ class TreeService {
             throw new IllegalOperationException();
         }
 
-        $latestTreeVersion = $this->getTreeVersion($spaceId, $category);
+        $latestTreeVersion = $this->getTreeVersion($spaceId, $treeId);
         if ($latestTreeVersion != $treeVersion) {
             throw new TreeUpdatedException();
         }
@@ -190,13 +181,13 @@ class TreeService {
         $updates[$nodeId] = [
             'title' => $newTitle
         ];
-        return TreeNode::modifyNodes($spaceId, $category, $treeVersion, $updates);
+        return TreeNode::modifyNodes($spaceId, $treeId, $treeVersion, $updates);
     }
 
     /**
      * move a node
      * @param int $spaceId
-     * @param int $category
+     * @param int $treeId
      * @param string $treeVersion
      * @param int $nodeId
      * @param int $newPid
@@ -204,11 +195,11 @@ class TreeService {
      * @return string the new version string of the tree
      * @throws TreeUpdatedException, IllegalOperationException
      */
-    public function moveNode(int $spaceId, int $category, string $treeVersion, int $nodeId, int $newPid, int $newLocation): string {
+    public function moveNode(int $spaceId, int $treeId, string $treeVersion, int $nodeId, int $newPid, int $newLocation): string {
         //generate idMap and pidMap
         $idMap = [];
         $pidMap = [];
-        $nodes = TreeNode::getNodes($spaceId, $category);
+        $nodes = TreeNode::getNodes($spaceId, $treeId);
         foreach ($nodes as $tmpNode) {
             $pid = $tmpNode->pid;
             if (!isset($pidMap[$pid])) {
@@ -332,11 +323,11 @@ class TreeService {
             }
         }*/
 
-        $latestTreeVersion = $this->getTreeVersion($spaceId, $category);
+        $latestTreeVersion = $this->getTreeVersion($spaceId, $treeId);
         if ($latestTreeVersion != $treeVersion) {
             throw new TreeUpdatedException();
         }
 
-        return TreeNode::modifyNodes($spaceId, $category, $treeVersion, $updates);
+        return TreeNode::modifyNodes($spaceId, $treeId, $treeVersion, $updates);
     }
 }

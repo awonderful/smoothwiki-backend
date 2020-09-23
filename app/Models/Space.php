@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
+use App\Models\SpaceMember;
 
 class Space extends Model
 {
@@ -13,7 +15,7 @@ class Space extends Model
     protected $primaryKey = 'id';
 
     public static function createSpace(int $type, string $title, string $desc, int $creator) {
-        return DB::transaction(function() use($type, $title, $creator) {
+        return DB::transaction(function() use($type, $title, $desc, $creator) {
             $space = new Space();
             $space->type    = $type;
             $space->title   = $title;
@@ -24,32 +26,6 @@ class Space extends Model
                 throw new UnfinishedSavingException();
             }
             $spaceId = $space->id;
-
-            $mainTreeRoot = new TreeNode();
-            $mainTreeRoot->space_id = $spaceId;
-            $mainTreeRoot->pid      = 0;
-            $mainTreeRoot->category = config('dict.TreeNodeCategory.MAIN');
-            $mainTreeRoot->title    = 'MAIN';
-            $mainTreeRoot->type     = config('dict.TreeNodeType.ARTICLE');
-            $mainTreeRoot->version  = Util::version();
-            $mainTreeRoot->ext      = '';
-            $succ = $mainTreeRoot->save();
-            if (!$succ) {
-                throw new UnfinishedSavingException();
-            }
-
-            $trashTreeRoot = new TreeNode();
-            $trashTreeRoot->space_id = $spaceId;
-            $trashTreeRoot->pid      = 0;
-            $trashTreeRoot->category = config('dict.TreeNodeCategory.TRASH');
-            $trashTreeRoot->title    = 'TRASH';
-            $trashTreeRoot->type     = config('dict.TreeNodeType.ARTICLE');
-            $trashTreeRoot->version  = Util::version();
-            $trashTreeRoot->ext      = '';
-            $succ = $trashTreeRoot->save();
-            if (!$succ) {
-                throw new UnfinishedSavingException();
-            }
 
             $spaceMember = new SpaceMember();
             $spaceMember->space_id    = $spaceId;
