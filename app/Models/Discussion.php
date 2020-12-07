@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Collection;
 use App\Libraries\Util;
-use App\Exceptions\UnfinishedSavingException;
+use App\Exceptions\UnfinishedDBOperationException;
 use App\Exceptions\ArticleUpdatedException;
 
 class Discussion extends Model
@@ -64,7 +64,7 @@ class Discussion extends Model
             $newArticle->fill($article);
             $newArticle->save();
 
-            $nodeVersion = TreeNode::regenerateNodeVersion($spaceId, config('dict.TreeNodeCategory.MAIN'), $nodeId);
+            $nodeVersion = TreeNode::regenerateNodeVersion($spaceId, config('dict.TreeNodetreeId.MAIN'), $nodeId);
 
             return [
                 'articleId'      => $newArticle->id,
@@ -86,7 +86,7 @@ class Discussion extends Model
 
             $newNodeVersion = Util::version();
             $affectedRows = TreeNode::where('space_id', $spaceId)
-                    ->where('category', config('dict.TreeNodeCategory.MAIN'))
+                    ->where('treeId', config('dict.TreeNodetreeId.MAIN'))
                     ->where('id', $nodeId)
                     ->where('version', $nodeVersion)
                     ->where('deleted', 0)
@@ -106,8 +106,8 @@ class Discussion extends Model
         });       
     }
 
-    public static function updateArticle(int $spaceId, int $category, int $nodeId, int $articleId, string $articleVersion, int $author, array $article): string {
-        return DB::transaction(function() use ($spaceId, $category, $nodeId, $articleId, $articleVersion, $author, $article) {
+    public static function updateArticle(int $spaceId, int $treeId, int $nodeId, int $articleId, string $articleVersion, int $author, array $article): string {
+        return DB::transaction(function() use ($spaceId, $treeId, $nodeId, $articleId, $articleVersion, $author, $article) {
             $curArticle = static::where('space_id', $spaceId)
                 ->where('node_id', $nodeId)
                 ->where('id', $articleId)
@@ -134,7 +134,7 @@ class Discussion extends Model
             $curArticle->version = Util::version();
             $curArticle->save();
 
-            $newNodeVersion = TreeNode::regenerateNodeVersion($spaceId, $category, $nodeId);
+            $newNodeVersion = TreeNode::regenerateNodeVersion($spaceId, $treeId, $nodeId);
   
             return [
                 'articleVersion' => $curArticle->version,
@@ -143,7 +143,7 @@ class Discussion extends Model
         });
     }
 
-    public static function modifyArticlePoses(int $spaceId, int $category, int $nodeId, int $poses) {
+    public static function modifyArticlePoses(int $spaceId, int $treeId, int $nodeId, int $poses) {
         return DB::transaction(function() use ($spaceId, $nodeId, $poses) {
             foreach ($poses as $articleId => $pos) {
                 $affectedRows = static::where('space_id', $spaceId)
@@ -155,11 +155,11 @@ class Discussion extends Model
                     ]);
 
                 if ($affectedRows != 1) {
-                    throw new UnfinishedSavingException();
+                    throw new UnfinishedDBOperationException();
                 }
             }
 
-            return TreeNode::regenerateNodeVersion($spaceId, $category, $nodeId);
+            return TreeNode::regenerateNodeVersion($spaceId, $treeId, $nodeId);
         });
     }
 }

@@ -24,7 +24,7 @@ class SpaceMenu extends Model
         $menu->extend    = $extend;
         $succ = $menu->save();
         if (!$succ) {
-            throw new UnfinishedSavingException();
+            throw new UnfinishedDBOperationException();
         }
 
         return $menu->id;

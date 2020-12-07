@@ -7,19 +7,18 @@ use App\Models\ArticleHistory;
 use App\Models\TreeNode;
 use App\Exceptions\PageUpdatedException;
 use App\Exceptions\TreeNotExistException;
-use App\Exceptions\UnfinishedSavingException;
+use App\Exceptions\UnfinishedDBOperationException;
 use Illuminate\Database\Eloquent\Collection;
 
 class ArticlePageService {
 
-    public function getArticles(int $spaceId, int $treeId, int $nodeId): Collection {
-        return Article::getArticles($spaceId, $treeId, $nodeId);
+    public function getArticles(int $spaceId, int $nodeId, $fields): Collection {
+        return Article::getArticles($spaceId, $nodeId, $fields);
     }
 
     /**
      * get the articles' versions
      * @param int $spaceId
-     * @param int $treeId
      * @param int $nodeId
      * @return array
      *      [
@@ -33,23 +32,22 @@ class ArticlePageService {
      *          ...
      *      ]
      */
-    public function getVersions(int $spaceId, int $treeId, int $nodeId): array {
-        return Article::getArticles($spaceId, $treeId, $nodeId, ['id', 'version'])->toArray();
+    public function getVersions(int $spaceId, int $nodeId): array {
+        return Article::getArticles($spaceId, $nodeId, ['id', 'version'])->toArray();
     }
 
     /**
      * add an article
      * @param int $spaceId
-     * @param int $treeId
      * @param int $nodeId
      * @param array $article
      * @param array $prevArticle
      */
-    public function addArticle(int $spaceId, int $treeId, int $nodeId, array $article, int $prevArticleId): Article {
+    public function addArticle(int $spaceId, int $nodeId, array $article, int $prevArticleId): Article {
         $author = 0;
 
-        $newArticle = Article::addArticle($spaceId, $treeId, $nodeId, $article, $author);
-        $this->moveArticle($spaceId, $treeId, $nodeId, $newArticle->id, $prevArticleId);
+        $newArticle = Article::addArticle($spaceId, $nodeId, $article, $author);
+        $this->moveArticle($spaceId, $nodeId, $newArticle->id, $prevArticleId);
 
         return $newArticle;
     }
@@ -57,7 +55,6 @@ class ArticlePageService {
     /**
      * update an article
      * @param int $spaceId
-     * @param int $treeId
      * @param int $nodeId
      * @param int $articleId
      * @param string $articleVersion
@@ -68,25 +65,41 @@ class ArticlePageService {
      *          'search' => ...
      *      ]
      * @return string the new version of the article
-     * @throws ArticleUpdatedException, UnfinishedSavingException
+     * @throws ArticleNotExistException, ArticleRemovedException, ArticleUpdatedException, UnfinishedDBOperationException
      */
-    public function updateArticle(int $spaceId, int $treeId, int $nodeId, int $articleId, string $articleVersion, array $article): string {
+    public function updateArticle(int $spaceId, int $nodeId, int $articleId, string $articleVersion, array $article): string {
         $author = 0;
 
-        return Article::updateArticle($spaceId, $treeId, $nodeId, $articleId, $articleVersion, $author, $article);
+        return Article::updateArticle($spaceId, $nodeId, $articleId, $articleVersion, $author, $article);
     }
+
+     /**
+     * remove an article
+     * @param int $spaceId
+     * @param int $nodeId
+     * @param int $articleId
+     * @param string $articleVersion
+     * @return void 
+     * @throws ArticleNotExistException, ArticleUpdatedException
+     */
+    public function removeArticle(int $spaceId, int $nodeId, int $articleId, string $articleVersion): void {
+        $operator = 0;
+
+        Article::removeArticle($spaceId, $nodeId, $articleId, $articleVersion, $operator);
+    }
+
+   
 
     /**
      * move an article
      * @param int $spaceId
-     * @param int $treeId
      * @param int $nodeId
      * @param int $articleId
      * @param int $prevArticleId
      * @return void
      * @throws PageUpdatedException
      */
-    public function moveArticle(int $spaceId, int $treeId, int $nodeId, int $articleId, int $prevArticleId): void {
+    public function moveArticle(int $spaceId, int $nodeId, int $articleId, int $prevArticleId): void {
         if ($articleId == $prevArticleId) {
             throw new IllegalOperationException();
         }
@@ -95,7 +108,7 @@ class ArticlePageService {
         $prevArticle = null;
         $opArticleExist = false;
 
-        $articles = Article::getArticles($spaceId, $treeId, $nodeId, ['id', 'pos'])->all();
+        $articles = Article::getArticles($spaceId, $nodeId, ['id', 'pos'])->all();
         foreach ($articles as $idx => $article) {
             if ($article->id == $prevArticleId) {
                 $prevArticle = $article;
@@ -113,7 +126,7 @@ class ArticlePageService {
         if ($prevArticleId == 0) {
             if ($articles[0]->id != $articleId) {
                 $newPos = $articles[0]->pos - 1000;
-                Article::modifyArticlePoses($spaceId, $treeId, $nodeId, [$articleId => $newPos]);
+                Article::modifyArticlePoses($spaceId, $nodeId, [$articleId => $newPos]);
             }
             return;
         }
@@ -122,7 +135,7 @@ class ArticlePageService {
         if ($prevArticleIndex == count($articles) - 1) {
             if ($articles[$prevArticleIndex]->id != $articleId) {
                 $newPos = $articles[$prevArticleIndex]->pos + 1000;
-                Article::modifyArticlePoses($treeId, $nodeId, [$articleId => $newPos]);
+                Article::modifyArticlePoses($nodeId, [$articleId => $newPos]);
             }
             return;
         }
@@ -137,7 +150,7 @@ class ArticlePageService {
         $nextPos = $nextArticle->pos;
         if ($nextPos - $prevPos > 2) {
             $newPos = ($prevPos + $nextPos) / 2;
-            Article::modifyArticlePoses($spaceId, $treeId, $nodeId, [$articleId => $newPos]);
+            Article::modifyArticlePoses($spaceId, $nodeId, [$articleId => $newPos]);
         } else {
             $modifyPoses = [];
             for ($i = $prevArticleIndex + 1; $i < count($articles); $i++) {
@@ -145,7 +158,7 @@ class ArticlePageService {
                 $modifyPoses[$tmpArticle->id] = $tmpArticle['pos'] + 2000;
             }
             $modifyPoses[$articleId] = $prevPos + 1000;
-            Article::modifyArticlePoses($spaceId, $treeId, $nodeId, $modifyPoses);
+            Article::modifyArticlePoses($spaceId, $nodeId, $modifyPoses);
         }
 
         return;

@@ -22,6 +22,7 @@ class TreeNode extends Model
         return static::where('space_id', $spaceId)
             ->where('tree_id', $treeId)
             ->where('deleted', 0)
+            ->where($conditions)
             ->orderby('pos', 'asc')
             ->get($fields);
     }
@@ -30,23 +31,23 @@ class TreeNode extends Model
          return static::where('space_id', $spaceId)
             ->where('tree_id', $treeId)
             ->where('deleted', 0)
-            ->where('id', $nodeId)
+            ->where('id',      $nodeId)
             ->first();
     }
 
     public static function getRootNode(int $spaceId, int $treeId): ?TreeNode {
         return static::where('space_id', $spaceId)
             ->where('tree_id', $treeId)
-            ->where('pid', 0)
+            ->where('pid',     0)
             ->where('deleted', 0)
             ->first();
     }
 
     public static function getMaxChildPos(int $spaceId, int $treeId, int $pid): ?int {
         return static::where('space_id', $spaceId)
-                    ->where('tree_id', $treeId)
-                    ->where('pid', $pid)
-                    ->where('deleted', 0)
+                    ->where('tree_id',   $treeId)
+                    ->where('pid',       $pid)
+                    ->where('deleted',   0)
                     ->max('pos');
     }
 
@@ -74,9 +75,9 @@ class TreeNode extends Model
         return DB::transaction(function() use ($spaceId, $treeId, $treeVersion, $updates) {
             foreach ($updates as $id => $update) {
                 $affectedRows = static::where('space_id', $spaceId)
-                    ->where('tree_id', $treeId)
-                    ->where('id', $id)
-                    ->where('deleted', 0)
+                    ->where('tree_id',  $treeId)
+                    ->where('id',       $id)
+                    ->where('deleted',  0)
                     ->update($update);
 
                 if ($affectedRows != 1) {
@@ -86,10 +87,10 @@ class TreeNode extends Model
 
             $newTreeVersion = util::version();
             $affectedRows = static::where('space_id', $spaceId)
-                ->where('tree_id', $treeId)
-                ->where('pid', 0)
-                ->where('version', $treeVersion)
-                ->where('deleted', 0)
+                ->where('tree_id',  $treeId)
+                ->where('pid',      0)
+                ->where('version',  $treeVersion)
+                ->where('deleted',  0)
                 ->update([
                     'version' => $newTreeVersion
                 ]);
@@ -113,7 +114,7 @@ class TreeNode extends Model
      *          'id' => ...,
      *          'treeVersion' => ...
      *      ]
-     * @throws IllegalOperationException, TreeUpdatedException, UnfinishedSavingException
+     * @throws IllegalOperationException, TreeUpdatedException, UnfinishedDBOperationException
      */
     public static function addChildNode(int $spaceId, int $treeId, string $treeVersion, array $node): array {
         if ($node['pid'] <= 0) {
@@ -128,15 +129,15 @@ class TreeNode extends Model
             $treeNode->fill($node);
             $succ = $treeNode->save();
             if (!$succ) {
-                throw new UnfinishedSavingException();
+                throw new UnfinishedDBOperationException();
             }
 
             $newTreeVersion = util::version();
             $affectedRows = static::where('space_id', $spaceId)
-                ->where('tree_id', $treeId)
-                ->where('pid', 0)
-                ->where('version', $treeVersion)
-                ->where('deleted', 0)
+                ->where('tree_id',  $treeId)
+                ->where('pid',      0)
+                ->where('version',  $treeVersion)
+                ->where('deleted',  0)
                 ->update([
                     'version' => $newTreeVersion
                 ]);
@@ -154,6 +155,8 @@ class TreeNode extends Model
         return $rs;
     }
 
+
+
     /**
      * regenerate a non-root node's version
      * @param int $spaceId
@@ -165,16 +168,16 @@ class TreeNode extends Model
         $newVersion = Util::version();
 
         $affectedRows = static::where('space_id', $spaceId)
-            ->where('tree_id', $treeId)
-            ->where('id', $nodeId)
+            ->where('tree_id',  $treeId)
+            ->where('id',       $nodeId)
             ->where('pid', '>', 0)
-            ->where('deleted', 0)
+            ->where('deleted',  0)
             ->update([
                 'version' => $newVersion
             ]);
 
         if ($affectedRows == 0) {
-            throw new UnfinishedSavingException();
+            throw new UnfinishedDBOperationException();
         }
 
         return $newVersion;
@@ -196,9 +199,52 @@ class TreeNode extends Model
         $succ = $treeNode->save();
 
         if (!$succ) {
-            throw new UnfinishedSavingException();
+            throw new UnfinishedDBOperationException();
         }
 
         return $treeNode->id;
+    }
+
+    /**
+     * modify nodes of more than one trees
+     * @param int $spaceId
+     * @param int $treeUpdates
+     *  [
+     *      [
+     *          treeId      => treeId1,
+     *          treeversion => version1,
+     *          updates     => [
+     *              id1     => [
+     *                  column1 => val1,
+     *                  column2 => val2,
+     *                  ...
+     *              ],
+     *              id2   => [
+     *                  column1 => val1,
+     *                  column2 => val2,
+     *                  ...
+     *              ]
+     *          ]
+     *      ],
+    *       ...
+     *  ]
+     */
+    public static function modifyNodesOfMultipleTrees(int $spaceId, array $treeUpdates) {
+        return DB::transaction(function() use ($spaceId, $treeUpdates)  {
+            $newTreeVersions = [];
+
+            foreach ($treeUpdates as $tmp) {
+                $treeId      = $tmp['treeId'];
+                $treeVersion = $tmp['treeVersion'];
+                $updates     = $tmp['updates'];
+                $newTreeVersion = modifyNodes($spaceId, $treeId, $treeVersion, $updates);
+
+                $newTreeVersions[] = [
+                    $treeId => $newTreeVersion
+                ];
+            }
+
+            return $newTreeVersions;
+        });
     }
 }

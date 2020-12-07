@@ -7,7 +7,7 @@ use App\Models\Space;
 use App\Models\SpaceMenu;
 use App\Exceptions\PageUpdatedException;
 use App\Exceptions\TreeNotExistException;
-use App\Exceptions\UnfinishedSavingException;
+use App\Exceptions\UnfinishedDBOperationException;
 use Illuminate\Database\Eloquent\Collection;
 
 class SpaceService {

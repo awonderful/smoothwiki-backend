@@ -23,7 +23,7 @@ class Space extends Model
             $space->creator = $creator;
             $succ = $space->save();
             if (!$succ) {
-                throw new UnfinishedSavingException();
+                throw new UnfinishedDBOperationException();
             }
             $spaceId = $space->id;
 
@@ -35,7 +35,7 @@ class Space extends Model
             $spaceMember->status      = config('dict.SpaceMemberStatus.APPROVED');
             $succ = $spaceMember->save();
             if (!$succ) {
-                throw new UnfinishedSavingException();
+                throw new UnfinishedDBOperationException();
             }
 
             return $spaceId;

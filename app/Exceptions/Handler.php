@@ -51,8 +51,26 @@ class Handler extends ExceptionHandler
      */
     public function render($request, Throwable $exception)
     {
+        $map = [
+            '\App\Exceptions\ArticleNotExistException'  => 'ARTICLE_NOT_EXIST',
+            '\App\Exceptions\ArticleRemovedException'   => 'ARTICLE_REMOVED',
+            '\App\Exceptions\ArticleUpdatedException'   => 'ARTICLE_UPDATED',
+            '\App\Exceptions\PageNotExistException'     => 'PAGE_NOT_EXIST',
+            '\App\Exceptions\PageRemovedException'      => 'PAGE_REMOVED',
+            '\App\Exceptions\PageUpdatedException'      => 'PAGE_UPDATED',
+            '\App\Exceptions\TreeNodeNotExistException' => 'TREE_NODE_NOT_EXIST',
+            '\App\Exceptions\TreeNotExistException'     => 'TREE_NOT_EXIST',
+            '\App\Exceptions\TreeUpdatedException'      => 'TREE_UPDATED'
+        ];
+
         if ($exception instanceof \Illuminate\Validation\ValidationException) {
             return response()->json(Result::get('INVALID_PARAM', $exception->errors()));
+        }
+
+        foreach ($map as $exceptionClass => $errorAlias) {
+            if ($exception instanceof $exceptionClass) {
+                return response()->json(Result::error($errorAlias));
+            }
         }
 
         return parent::render($request, $exception);

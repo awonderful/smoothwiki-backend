@@ -22,7 +22,7 @@ class SpaceMember extends Model
         $member->status      = $status;
         $succ = $member->save();
         if (!$succ) {
-            throw new UnfinishedSavingException();
+            throw new UnfinishedDBOperationException();
         }
     }
 }
