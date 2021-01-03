@@ -27,6 +27,15 @@ class TreeNode extends Model
             ->get($fields);
     }
 
+    public static function getTrashNodes(int $spaceId, int $treeId, array $conditions = [], array $fields = ['*']): collection {
+        return static::where('space_id', $spaceId)
+            ->where('tree_id', $treeId)
+            ->where('deleted', 1)
+            ->where($conditions)
+            ->orderby('pos', 'asc')
+            ->get($fields);
+    }
+
     public static function getNodeById(int $spaceId, int $treeId, int $nodeId): ?TreeNode {
          return static::where('space_id', $spaceId)
             ->where('tree_id', $treeId)

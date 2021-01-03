@@ -117,6 +117,139 @@ class TreeService {
     }
 
     /**
+     * get the trash tree
+     * @param int $spaceId
+     * @param int $treeId
+     * @return array
+     *   example:
+     *      [
+     *          'tree' => [
+     *              'spaceId'   => 1,
+     *              'id'        => 100,
+     *              'pid'       => 0,
+     *              'title'     => 'ROOT',
+     *              'pos'       => 0,
+     *              'children'  => [
+     *                  [
+     *                      ...
+     *                      ...
+     *                  ],
+     *                  ...
+     *                  ...
+     *              ]
+     *          ],
+     *          'version' => 'dfg87ssdfg7'
+     *      ]
+     * @throws TreeNotExistException
+     */
+    public function getTrashTree(int $spaceId, int $treeId): array {
+        $rows = TreeNode::getTrashNodes($spaceId, $treeId, [], ['id', 'pid', 'tree_id', 'type', 'title', 'version', 'mtime']);
+
+        //generate the $map
+        // [
+        //    $id1 => $node1,
+        //    $id2 => $node2,
+        //    $id3 => $node3
+        // ]
+        // In php an object is passed by reference
+        /**
+         * generate the $map
+         * [
+         *      id1 => (object)[
+         *          'id'  => id1,
+         *          'pid' => pid1,
+         *           ...
+         *      ],
+         *      ...
+         * ]
+         */
+        $map = [];
+        foreach ($rows as $row) {
+            $map[$row->id] = (object)[
+                'spaceId'  => $row->space_id,
+                'type'     => $row->type,
+                'id'       => $row->id,
+                'pid'      => $row->pid,
+                'title'    => $row->title,
+                'mtime'    => $row->mtime
+            ];
+        }
+
+        /**
+         * $map = [
+         *      id1 => (object)[
+         *          'id'  => id1,
+         *          'pid' => pid1,
+         *          ...
+         *          'hasChild' => true,
+         *          'children' => [
+         *              (object) [
+         *                  'id'  => ...,
+         *                  'pid' => ...,
+         *                  ...
+         *                  'hasChild' => true,
+         *                  'children' => [
+         *                      ...
+         *                  ]
+         *              ]
+         *          ]
+         *      ]
+         * ]
+         */
+        foreach ($map as $id => $node) {
+            $pid = $node->pid;
+            if ($pid > 0 && isset($map[$pid])) {
+                $map[$pid]->hasChild = true;
+                if (!isset($map[$pid]->children)) {
+                    $map[$pid]->children = [];
+                }
+                array_push($map[$pid]->children, $node);
+            }
+        }
+
+        //remove the nodes that are children of other nodes
+        $removeIds = [];
+        foreach ($map as $id => $tmp) {
+            $pid = $tmp->pid;
+            if ($pid > 0 && isset($map[$pid])) {
+                $removeIds[] = $id;
+            }
+        }
+        foreach ($removeIds as $id) {
+            unset($map[$id]);
+        }
+
+        //sort
+        $nodes = array_values($map);
+        usort($nodes, function($node1, $node2) {
+            $ts1 = strtotime($node1->mtime);
+            $ts2 = strtotime($node2->mtime);
+
+            return $ts1 - $ts2;
+        });
+
+        //return
+        $tree = [
+            'spaceId'  => $spaceId,
+            'type'     => 0,
+            'id'       => 0,
+            'pid'      => 0,
+            'title'    => '回收站',
+            'pos'      => 0,
+        ];
+        if (!empty($map)) {
+            $tree['hasChild'] = true;
+            $tree['children'] = $nodes;
+        }
+
+        return [
+            'tree' => $tree
+        ];
+    }
+
+
+
+    /**
      * get a node's child nodes
      * @param $spaceId
      * @param $treeId
@@ -146,10 +279,18 @@ class TreeService {
             $pidMap[$pid][] = $row;
         }
 
+        //get the node
+        $curNode = null;
+        foreach ($rows as $row) {
+            if ($row->id === $nodeId) {
+                $curNode = $row;
+            }
+        }
+
         //use a stack to find out all the descendent nodes
         $descendentNodes = [];
 
-        $stack = [$descendentNodes];
+        $stack = [$curNode];
         while (true) {
             $node = array_pop($stack);
             if ($node === null) {
@@ -485,10 +626,8 @@ class TreeService {
         return TreeNode::modifyNodesOfMultipleTrees($spaceId, $treeUpdates);
     }
 
-
-
     /**
-     * remove a node and all its descendent nodes
+     * remove a node and all its descendent nodes permanently
      * @param int $spaceId
      * @param int $treeId
      * @param string $treeVersion
@@ -513,8 +652,9 @@ class TreeService {
 
         //remove the nodes
         $updates = [];
-        foreach ($removeNodeIds as $removeNodeId) {
-            $updates[$removeNodeId] = [
+        $removeNodes = $this->getDescendentNodes($spaceId, $treeId, $nodeId, ['id']);
+        foreach ($removeNodes as $removeNode) {
+            $updates[$removeNode->id] = [
                 'deleted' => 1
             ];
         }

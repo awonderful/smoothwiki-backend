@@ -2,9 +2,6 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\TreeController;
-use App\Http\Controllers\ArticlePageController;
-use App\Http\Controllers\SpaceController;
 
 /*
 |--------------------------------------------------------------------------
@@ -28,6 +25,7 @@ Route::middleware([])->group(function () {
     Route::get('tree/node/remove', 'TreeController@removeNode');
     Route::get('tree/node/move',   'TreeController@moveNode');
     Route::get('tree/version',     'TreeController@getTreeVersion');
+    Route::get('tree/trash/get',   'TreeController@getTrashTree');
 
     Route::post('article-page/article/add',    'ArticlePageController@addArticle');
     Route::post('article-page/article/update', 'ArticlePageController@updateArticle');
@@ -35,6 +33,9 @@ Route::middleware([])->group(function () {
     Route::get ('article-page/article/remove', 'ArticlePageController@removeArticle');
     Route::get ('article-page/get',            'ArticlePageController@getPage');
     Route::get ('article-page/version',        'ArticlePageController@getPageVersion');
+
+    Route::post('attachment/upload',   'AttachmentController@upload');
+    Route::get('attachment/download', 'AttachmentController@download');
 
     Route::get('space/create',      'SpaceController@createSpace');
     Route::get('space/menu/create', 'SpaceController@createMenu');

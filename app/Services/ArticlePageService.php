@@ -135,7 +135,7 @@ class ArticlePageService {
         if ($prevArticleIndex == count($articles) - 1) {
             if ($articles[$prevArticleIndex]->id != $articleId) {
                 $newPos = $articles[$prevArticleIndex]->pos + 1000;
-                Article::modifyArticlePoses($nodeId, [$articleId => $newPos]);
+                Article::modifyArticlePoses($spaceId, $nodeId, [$articleId => $newPos]);
             }
             return;
         }
