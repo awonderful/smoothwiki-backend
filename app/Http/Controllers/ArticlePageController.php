@@ -50,6 +50,7 @@ class ArticlePageController extends Controller {
             'body'          => ['present',  'string',  'max:10485680'],
             'search'        => ['present',  'string',  'max:10485680'],
             'prevArticleId' => ['required', 'integer', 'min:0'],
+            'attachmentIds' => ['present',  'string',  'max:1000', 'regex:/[0-9]{1,8}(,[0-9]{1,8})*/'],
         ]);
 
         $spaceId       = $request->input('spaceId');
@@ -59,6 +60,7 @@ class ArticlePageController extends Controller {
         $body          = $request->input('body');
         $search        = $request->input('search');
         $prevArticleId = $request->input('prevArticleId');
+        $attachmentIds = explode(',', $request->input('attachmentIds'));
 
         $article = [
             'type'   => $type,
@@ -68,7 +70,7 @@ class ArticlePageController extends Controller {
         ];
 
         $service = new ArticlePageService();
-        $article = $service->addArticle($spaceId, $nodeId, $article, $prevArticleId);
+        $article = $service->addArticle($spaceId, $nodeId, $article, $prevArticleId, $attachmentIds);
         return Result::data([
             'id'      => $article->id,
             'version' => $article->version,
@@ -143,6 +145,36 @@ class ArticlePageController extends Controller {
         $version = $service->removeArticle($spaceId, $nodeId, $articleId, $articleVersion);
         return Result::data([
             'version' => $version,
+        ]);
+    }
+
+    public function getArticle(Request $request) {
+        $request->validate([
+            'spaceId'        => ['required', 'integer', 'min:1'],
+            'nodeId'         => ['required', 'integer', 'min:1'],
+            'articleId'      => ['required', 'integer', 'min:1'],
+        ]);
+
+        $spaceId   = $request->input('spaceId');
+        $nodeId    = $request->input('nodeId');
+        $articleId = $request->input('articleId');
+
+        $service = new ArticlePageService();
+        $article = $service->getArticleById($spaceId, $nodeId, $articleId);
+        return Result::data([
+            'article' => [
+                'id'      => $article->id,
+                'spaceId' => $article->space_id,
+                'nodeId'  => $article->node_id,
+                'type'    => $article->type,
+                'title'   => $article->title,
+                'body'    => $article->body,
+                'search'  => $article->search,
+                'author'  => $article->author,
+                'version' => $article->version,
+                'ctime'   => $article->ctime,
+                'mtime'   => $article->mtime,
+            ],
         ]);
     }
 }

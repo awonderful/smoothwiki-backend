@@ -67,7 +67,7 @@ class Util {
         );
 
         $ext = strtolower($ext);
-        if (array_key_exists($ext, $mime_types)) {
+        if (array_key_exists($ext, $mimeTypeMap)) {
             return $mimeTypeMap[$ext];
         }
 

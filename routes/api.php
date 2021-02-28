@@ -31,11 +31,14 @@ Route::middleware([])->group(function () {
     Route::post('article-page/article/update', 'ArticlePageController@updateArticle');
     Route::get ('article-page/article/move',   'ArticlePageController@moveArticle');
     Route::get ('article-page/article/remove', 'ArticlePageController@removeArticle');
+    Route::get ('article-page/article/get',    'ArticlePageController@getArticle');
     Route::get ('article-page/get',            'ArticlePageController@getPage');
     Route::get ('article-page/version',        'ArticlePageController@getPageVersion');
 
-    Route::post('attachment/upload',   'AttachmentController@upload');
-    Route::get('attachment/download', 'AttachmentController@download');
+    Route::post('attachment/upload',       'AttachmentController@upload');
+    Route::post('attachment/upload/chunk', 'AttachmentController@uploadInChunks');
+    Route::get ('attachment/download',     'AttachmentController@download');
+    Route::get ('attachment/list',         'AttachmentController@getAttachments');
 
     Route::get('space/create',      'SpaceController@createSpace');
     Route::get('space/menu/create', 'SpaceController@createMenu');

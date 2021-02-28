@@ -70,7 +70,7 @@ class TreeService {
         $root = $pidMap[0][0];
         $treeVersion = $root->version;
         $tree = [
-            'spaceId'  => $root->space_id,
+            'spaceId'  => $spaceId,
             'type'     => $root->type,
             'id'       => $root->id,
             'pid'      => 0,

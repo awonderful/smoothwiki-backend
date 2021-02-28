@@ -34,7 +34,8 @@ class Article extends Model
         return static::where('space_id', $spaceId)
                     ->where('node_id',   $nodeId)
                     ->where('id',        $articleId)
-                    ->where('deleted',   0);
+                    ->where('deleted',   0)
+                    ->first();
     }
 
     public static function getMaxArticlePos(int $spaceId, int $nodeId): ?int {

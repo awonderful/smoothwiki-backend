@@ -5,10 +5,12 @@ namespace App\Services;
 use App\Models\Article;
 use App\Models\ArticleHistory;
 use App\Models\TreeNode;
+use App\Models\Attachment;
 use App\Exceptions\PageUpdatedException;
 use App\Exceptions\TreeNotExistException;
 use App\Exceptions\UnfinishedDBOperationException;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Log;
 
 class ArticlePageService {
 
@@ -43,11 +45,19 @@ class ArticlePageService {
      * @param array $article
      * @param array $prevArticle
      */
-    public function addArticle(int $spaceId, int $nodeId, array $article, int $prevArticleId): Article {
+    public function addArticle(int $spaceId, int $nodeId, array $article, int $prevArticleId, array $attachmentIds): Article {
         $author = 0;
 
         $newArticle = Article::addArticle($spaceId, $nodeId, $article, $author);
         $this->moveArticle($spaceId, $nodeId, $newArticle->id, $prevArticleId);
+
+        try {
+            Log::error("spaceId:$spaceId nodeId:$nodeId articleId:{$newArticle->id} attachmentIds:".join(',', $attachmentIds));
+            Attachment::attachToArticle($spaceId, $nodeId, $newArticle->id, $attachmentIds);
+        } catch (\Exception $e) {
+            Log::error("function addArticle spaceId:$spaceId nodeId:$nodeId articleId:{$newArticle->id} attachmentIds:".join(',', $attachmentIds));
+            Log::error($e->getMessage());
+        }
 
         return $newArticle;
     }
@@ -88,7 +98,16 @@ class ArticlePageService {
         Article::removeArticle($spaceId, $nodeId, $articleId, $articleVersion, $operator);
     }
 
-   
+    /**
+     * get an article
+     * @param int $spaceId
+     * @param int $nodeId
+     * @param int $articleId
+     * @throws ArticleNotExistException
+     */
+     public function getArticleById(int $spaceId, int $nodeId, int $articleId): Article {
+        return Article::getArticleById($spaceId, $nodeId, $articleId);
+    }
 
     /**
      * move an article
