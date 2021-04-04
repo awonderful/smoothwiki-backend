@@ -9,12 +9,16 @@ use App\Models\Attachment;
 use App\Exceptions\PageUpdatedException;
 use App\Exceptions\TreeNotExistException;
 use App\Exceptions\UnfinishedDBOperationException;
+use App\Services\PermissionChecker;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 
 class ArticlePageService {
 
     public function getArticles(int $spaceId, int $nodeId, $fields): Collection {
+        PermissionChecker::readSpace($spaceId);
+
         return Article::getArticles($spaceId, $nodeId, $fields);
     }
 
@@ -35,6 +39,8 @@ class ArticlePageService {
      *      ]
      */
     public function getVersions(int $spaceId, int $nodeId): array {
+        PermissionChecker::readSpace($spaceId);
+
         return Article::getArticles($spaceId, $nodeId, ['id', 'version'])->toArray();
     }
 
@@ -46,7 +52,9 @@ class ArticlePageService {
      * @param array $prevArticle
      */
     public function addArticle(int $spaceId, int $nodeId, array $article, int $prevArticleId, array $attachmentIds): Article {
-        $author = 0;
+        PermissionChecker::writeSpace($spaceId);
+
+        $author = Auth::id();
 
         $newArticle = Article::addArticle($spaceId, $nodeId, $article, $author);
         $this->moveArticle($spaceId, $nodeId, $newArticle->id, $prevArticleId);
@@ -78,7 +86,9 @@ class ArticlePageService {
      * @throws ArticleNotExistException, ArticleRemovedException, ArticleUpdatedException, UnfinishedDBOperationException
      */
     public function updateArticle(int $spaceId, int $nodeId, int $articleId, string $articleVersion, array $article): string {
-        $author = 0;
+        PermissionChecker::writeSpace($spaceId);
+
+        $author = Auth::id();
 
         return Article::updateArticle($spaceId, $nodeId, $articleId, $articleVersion, $author, $article);
     }
@@ -93,7 +103,9 @@ class ArticlePageService {
      * @throws ArticleNotExistException, ArticleUpdatedException
      */
     public function removeArticle(int $spaceId, int $nodeId, int $articleId, string $articleVersion): void {
-        $operator = 0;
+        PermissionChecker::writeSpace($spaceId);
+
+        $operator = Auth::id();
 
         Article::removeArticle($spaceId, $nodeId, $articleId, $articleVersion, $operator);
     }
@@ -106,6 +118,8 @@ class ArticlePageService {
      * @throws ArticleNotExistException
      */
      public function getArticleById(int $spaceId, int $nodeId, int $articleId): Article {
+        PermissionChecker::readSpace($spaceId);
+
         return Article::getArticleById($spaceId, $nodeId, $articleId);
     }
 
@@ -119,6 +133,10 @@ class ArticlePageService {
      * @throws PageUpdatedException
      */
     public function moveArticle(int $spaceId, int $nodeId, int $articleId, int $prevArticleId): void {
+        PermissionChecker::writeSpace($spaceId);
+
+        $operator = 0;
+
         if ($articleId == $prevArticleId) {
             throw new IllegalOperationException();
         }

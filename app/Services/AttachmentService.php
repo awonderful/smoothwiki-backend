@@ -4,37 +4,53 @@ namespace App\Services;
 
 use App\Models\Attachment;
 use App\Exceptions\AttachmentNotExistException;
+use App\Services\PermissionChecker;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
 class AttachmentService {
     public function addAttachment(int $spaceId, int $nodeId, int $articleId, UploadedFile $requestFile): int {
-        $uploader = 0;
+        PermissionChecker::writeSpace($spaceId);
+
+        $uploader = Auth::id();
 
         $path = "$spaceId/$nodeId";
         $newFilename = microtime(true).'_'.$uploader;
         $requestFile->storeAs($path, $newFilename);
 
         return Attachment::addAttachment($spaceId, $nodeId, $articleId, $uploader, [
-          'original_filename' => $requestFile->getClientOriginalName(),
-          'size'              => $requestFile->getSize(),
-          'extension'         => $requestFile->extension(),
-          'store_filename'    => "$path/$newFilename"
+            'original_filename' => $requestFile->getClientOriginalName(),
+            'size'              => $requestFile->getSize(),
+            'extension'         => $requestFile->extension(),
+            'store_filename'    => "$path/$newFilename"
         ]);
     }
 
     public function getAttachmentById(int $attachmentId): Object {
-        return Attachment::getAttachmentById($attachmentId);
+        $attachment = Attachment::getAttachmentById($attachmentId);
+
+        if ($attachment === null) {
+            throw new AttachmentNotExistException();
+        }
+
+        PermissionChecker::readSpace($attachment->space_id);
+
+        return $attachment;
     }
 
     public function getAttachments(int $spaceId, int $nodeId, int $articleId, array $fields = ['*']): Collection {
+        PermissionChecker::readSpace($spaceId);
+
         return Attachment::getAttachments($spaceId, $nodeId, $articleId, $fields);
     }
 
     //--------------------------upload large file--------------------------------
     public function initUploadInChunks(int $spaceId, int $nodeId, int $articleId, string $filename, int $size): array {
-        $uploader = 0;
+        PermissionChecker::writeSpace($spaceId);
+
+        $uploader = Auth::id();
 
         $path = "$spaceId/$nodeId";
         $newFilename = microtime(true).'_'.$uploader;
@@ -67,7 +83,9 @@ class AttachmentService {
     }
 
     public function uploadInChunks(int $spaceId, int $nodeId, int $articleId, int $attachmentId, UploadedFile $requestFile): void {
-        $uploader = 0;
+        PermissionChecker::writeSpace($spaceId);
+
+        $uploader = Auth::id();
 
         $attachment = $this->getAttachmentById($attachmentId);
         if ($attachment->space_id !== $spaceId || $attachment->node_id !== $nodeId || $attachment->article_id !== $articleId) {
@@ -81,7 +99,9 @@ class AttachmentService {
     }
 
     public function finishUploadInChunks(int $spaceId, int $nodeId, int $articleId, int $attachmentId): void {
-        $uploader = 0;
+        PermissionChecker::writeSpace($spaceId);
+
+        $uploader = Auth::id();
 
         $attachment = $this->getAttachmentById($attachmentId);
         if ($attachment->space_id !== $spaceId || $attachment->node_id !== $nodeId || $attachment->article_id !== $articleId) {

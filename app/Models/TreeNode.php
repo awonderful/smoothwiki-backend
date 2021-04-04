@@ -203,7 +203,7 @@ class TreeNode extends Model
         $treeNode->tree_id  = $treeId;
         $treeNode->title    = $title;
         $treeNode->pid      = 0;
-        $treeNode->type     = 0;
+        $treeNode->type     = config('dict.TreeNodeType.ARTICLE_PAGE');
         $treeNode->version  = Util::version();
         $succ = $treeNode->save();
 

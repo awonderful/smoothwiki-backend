@@ -6,69 +6,119 @@ use App\Http\Controllers\Controller;
 use App\Services\SpaceService;
 use App\Models\Space;
 use App\Libraries\Result;
-use App\Exceptions\SpaceMenuNotExistException;
 use Illuminate\Http\Request;
 
 class SpaceController extends Controller {
     public function createSpace(Request $request) {
         $request->validate([
-            'title'        => ['required', 'max:200'],
-            'desc'         => ['required', 'max:10000'],
-            'type'         => ['required', 'integer', 'in:'.implode(',', config('dict.SpaceType'))],
+            'title'       => ['required', 'string',  'max:200'],
+            'desc'        => ['nullable', 'string',  'max:10000'],
+            'type'        => ['required', 'integer', 'in:'.implode(',', config('dict.SpaceType'))],
+            'othersRead'  => ['required', 'integer', 'in:0,1'],
+            'othersWrite' => ['required', 'integer', 'in:0,1'],
         ]);
 
-        $title = $request->input('title');
-        $desc  = $request->input('desc');
-        $type  = $request->input('type');
+        $title       = $request->input('title');
+        $desc        = $request->input('desc');
+        $type        = $request->input('type');
+        $othersRead  = $request->input('othersRead');
+        $othersWrite = $request->input('othersWrite');
 
         $service = new SpaceService();
-        $spaceId = $service->createSpace($type, $title, $desc);
+        $spaceId = $service->createSpace($type, $title, $desc, $othersRead, $othersWrite);
         return Result::data([
             'id' => $spaceId,
         ]);
     }
 
-    public function createMenu(Request $request) {
+    public function updateSpace(Request $request) {
         $request->validate([
-            'spaceId' => ['required', 'integer', 'min:1'],
-            'title'   => ['required', 'max:200'],
-            'type'    => ['required', 'integer', 'in:'.implode(',', config('dict.SpaceMenuType'))],
+            'spaceId'     => ['required', 'integer', 'min:1'],
+            'title'       => ['required', 'string',  'max:200'],
+            'desc'        => ['nullable', 'string',  'max:10000'],
+            'othersRead'  => ['required', 'integer', 'in:0,1'],
+            'othersWrite' => ['required', 'integer', 'in:0,1'],
         ]);
 
-        try {
-            $spaceId = $request->input('spaceId');
-            $title   = $request->input('title');
-            $type    = $request->input('type');
+        $spaceId     = $request->input('spaceId');
+        $title       = $request->input('title');
+        $desc        = $request->input('desc');
+        $othersRead  = $request->input('othersRead');
+        $othersWrite = $request->input('othersWrite');
 
-            $service = new SpaceService();
-            $spaceMenuId = $service->createMenu($spaceId, $title, $type);
-            return Result::data([
-                'id' => $spaceMenuId,
-            ]);
-        } catch(SpaceMenuNotExistException $e) {
-            return Result::Error('SPACE_MENU_NOT_EXIST');
-        }
+        $service = new SpaceService();
+        $spaceId = $service->updateSpace($spaceId, $title, $desc, $othersRead, $othersWrite);
+        return Result::succ();
     }
 
-     public function renameMenu(Request $request) {
+
+
+    public function removeSpace(Request $request) {
         $request->validate([
-            'spaceId'  => ['required', 'integer', 'min:1'],
-            'menuId'   => ['required', 'integer', 'min:1'],
-            'title'    => ['required', 'max:200'],
+            'spaceId' => ['required', 'integer',  'min:1'],
         ]);
 
-        try {
-            $spaceId = $request->input('spaceId');
-            $menuId  = $request->input('menuId');
-            $title   = $request->input('title');
+        $spaceId = $request->input('spaceId');
 
-            $service = new SpaceService();
-            $spaceMenuId = $service->renameMenu($spaceId, $menuId, $title);
-            return Result::Succ();
-        } catch(SpaceMenuNotExistException $e) {
-            return Result::Error('SPACE_MENU_NOT_EXIST');
-        }
+        $service = new SpaceService();
+        $service->removeSpace($spaceId);
+        return Result::succ();
     }
 
-   
+    public function getSpaces(Request $request) {
+        $service = new SpaceService();
+        $spaces = $service->getCurrentUserSpaces();
+
+        return Result::data([
+            'spaces' => $spaces
+        ]);
+    }
+
+    public function getSpaceMembers(Request $request) {
+        $request->validate([
+            'spaceId' => ['required', 'integer',  'min:1'],
+        ]);
+
+        $spaceId = $request->input('spaceId');
+
+        $service = new SpaceService();
+        $members = $service->getSpaceMembers($spaceId);
+        return Result::data([
+            'members' => $members,
+        ]);
+    }
+
+    public function addSpaceMember(Request $request) {
+        $request->validate([
+            'spaceId' => ['required', 'integer',  'min:1'],
+            'email'   => ['required', 'string',   'max:100'],
+            'role'    => ['required', 'integer',  'in:'.implode(',', config('dict.SpaceMemberRole'))]
+        ]);
+
+        $spaceId = $request->input('spaceId');
+        $email   = $request->input('email');
+        $role    = $request->input('role');
+
+        $service = new SpaceService();
+        $member = $service->addSpaceMember($spaceId, $email, $role);
+        return Result::data([
+            'member' => $member,
+        ]);
+    }
+
+    public function removeSpaceMember(Request $request) {
+        $request->validate([
+            'spaceId' => ['required', 'integer',  'min:1'],
+            'uid'     => ['required', 'integer',  'min:1'],
+        ]);
+
+        $spaceId = $request->input('spaceId');
+        $uid     = $request->input('uid');
+
+        $service = new SpaceService();
+        $members = $service->removeSpaceMember($spaceId, $uid);
+        return Result::succ();
+    }
+
+
 }

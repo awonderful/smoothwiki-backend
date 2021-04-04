@@ -60,7 +60,8 @@ class Handler extends ExceptionHandler
             '\App\Exceptions\PageUpdatedException'      => 'PAGE_UPDATED',
             '\App\Exceptions\TreeNodeNotExistException' => 'TREE_NODE_NOT_EXIST',
             '\App\Exceptions\TreeNotExistException'     => 'TREE_NOT_EXIST',
-            '\App\Exceptions\TreeUpdatedException'      => 'TREE_UPDATED'
+            '\App\Exceptions\TreeUpdatedException'      => 'TREE_UPDATED',
+            '\App\Exceptions\PermissionDeniedException' => 'PERMISSION_DENIED'
         ];
 
         if ($exception instanceof \Illuminate\Validation\ValidationException) {

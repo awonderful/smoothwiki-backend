@@ -6,6 +6,7 @@ use App\Models\TreeNode;
 use App\Exceptions\TreeUpdatedException;
 use App\Exceptions\TreeNotExistException;
 use App\Exceptions\UnfinishedDBOperationException;
+use App\Services\PermissionChecker;
 
 class TreeService {
 
@@ -17,6 +18,8 @@ class TreeService {
      * @throws TreeNotExistException
      */
     public function getTreeVersion(int $spaceId, int $treeId): string {
+        PermissionChecker::readSpace($spaceId);
+
         $rootNode = TreeNode::getRootNode($spaceId, $treeId);
 
         if (empty($rootNode)) {
@@ -53,6 +56,8 @@ class TreeService {
      * @throws TreeNotExistException
      */
     public function getTree(int $spaceId, int $treeId): array {
+        PermissionChecker::readSpace($spaceId);
+
         $rows = TreeNode::getNodes($spaceId, $treeId, [], ['id', 'pid', 'tree_id', 'type', 'title', 'version']);
         if ($rows->isEmpty()) {
             throw new TreeNotExistException();
@@ -143,6 +148,8 @@ class TreeService {
      * @throws TreeNotExistException
      */
     public function getTrashTree(int $spaceId, int $treeId): array {
+        PermissionChecker::readSpace($spaceId);
+
         $rows = TreeNode::getTrashNodes($spaceId, $treeId, [], ['id', 'pid', 'tree_id', 'type', 'title', 'version', 'mtime']);
 
         //generate the $map
@@ -257,6 +264,8 @@ class TreeService {
      * @return collection
      */
     public function getChildNodes($spaceId, $treeId, $nodeId, $fields): collection {
+        PermissionChecker::readSpace($spaceId);
+
         return TreeNode::getNodes($spaceId, $treeId, [['pid', '=', $nodeId]], $fields);
     }
 
@@ -268,6 +277,8 @@ class TreeService {
      * @return an array of node objects
      */
     public function getDescendentNodes($spaceId, $treeId, $nodeId, $fields): array {
+        PermissionChecker::readSpace($spaceId);
+
         //generate the $pidMap
         $rows = TreeNode::getNodes($spaceId, $treeId, [], ['id', 'pid']);
         $pidMap = [];
@@ -323,6 +334,8 @@ class TreeService {
      * @throws TreeUpdatedException
      */
     public function appendChildNode(int $spaceId, int $treeId, string $treeVersion, int $type, int $pid, string $title): array {
+        PermissionChecker::writeSpace($spaceId);
+
         $parentNode = TreeNode::getNodeById($spaceId, $treeId, $pid);
         if (empty($parentNode)) {
             throw new TreeUpdatedException();
@@ -356,6 +369,8 @@ class TreeService {
      * @throws TreeUpdatedException, IllegalOperationException, UnfinishedDBOperationException
      */
     public function renameNode(int $spaceId, int $treeId, string $treeVersion, int $nodeId, string $newTitle): string {
+        PermissionChecker::writeSpace($spaceId);
+
         $node = TreeNode::getNodeById($spaceId, $treeId, $nodeId);
         if (empty($node)) {
             throw new TreeUpdatedException();
@@ -389,6 +404,8 @@ class TreeService {
      * @throws TreeUpdatedException, IllegalOperationException
      */
     public function moveNode(int $spaceId, int $treeId, string $treeVersion, int $nodeId, int $newPid, int $newLocation): string {
+        PermissionChecker::writeSpace($spaceId);
+
         //generate idMap and pidMap
         $idMap = [];
         $pidMap = [];
@@ -636,6 +653,9 @@ class TreeService {
      * @throws TreeUpdatedException, IllegalOperationException
      */
    public function removeNodeRecursively(int $spaceId, int $treeId, string $treeVersion, int $nodeId): string {
+        PermissionChecker::writeSpace($spaceId);
+
+
         $node = TreeNode::getNodeById($spaceId, $treeId, $nodeId);
         if (empty($node)) {
             throw new TreeUpdatedException();
