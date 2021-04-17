@@ -10,6 +10,7 @@ use App\Exceptions\PageUpdatedException;
 use App\Exceptions\TreeNotExistException;
 use App\Exceptions\UnfinishedDBOperationException;
 use App\Services\PermissionChecker;
+use App\Services\PresenceChecker;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
@@ -20,6 +21,15 @@ class ArticlePageService {
         PermissionChecker::readSpace($spaceId);
 
         return Article::getArticles($spaceId, $nodeId, $fields);
+    }
+
+    public function isPageWritable(int $spaceId, $nodeId): bool {
+        $rows = TreeNode::getTrashNodes($spaceId, 1, ['id' => $nodeId]);
+        if ($rows->isNotEmpty()){
+            return false;
+        }
+
+        return PermissionChecker::getSpacePermission($spaceId, 'write');
     }
 
     /**
@@ -53,6 +63,7 @@ class ArticlePageService {
      */
     public function addArticle(int $spaceId, int $nodeId, array $article, int $prevArticleId, array $attachmentIds): Article {
         PermissionChecker::writeSpace($spaceId);
+        PresenceChecker::node($spaceId, $nodeId);
 
         $author = Auth::id();
 
@@ -87,10 +98,18 @@ class ArticlePageService {
      */
     public function updateArticle(int $spaceId, int $nodeId, int $articleId, string $articleVersion, array $article): string {
         PermissionChecker::writeSpace($spaceId);
+        PresenceChecker::node($spaceId, $nodeId);
 
         $author = Auth::id();
 
         return Article::updateArticle($spaceId, $nodeId, $articleId, $articleVersion, $author, $article);
+    }
+
+    public function setArticleLevel(int $spaceId, int $nodeId, int $articleId, $level): void {
+        PermissionChecker::writeSpace($spaceId);
+        PresenceChecker::node($spaceId, $nodeId);
+
+        Article::setArticleLevel($spaceId, $nodeId, $articleId, $level);
     }
 
      /**
@@ -104,6 +123,7 @@ class ArticlePageService {
      */
     public function removeArticle(int $spaceId, int $nodeId, int $articleId, string $articleVersion): void {
         PermissionChecker::writeSpace($spaceId);
+        PresenceChecker::node($spaceId, $nodeId);
 
         $operator = Auth::id();
 
@@ -134,8 +154,7 @@ class ArticlePageService {
      */
     public function moveArticle(int $spaceId, int $nodeId, int $articleId, int $prevArticleId): void {
         PermissionChecker::writeSpace($spaceId);
-
-        $operator = 0;
+        PresenceChecker::node($spaceId, $nodeId);
 
         if ($articleId == $prevArticleId) {
             throw new IllegalOperationException();
@@ -199,5 +218,9 @@ class ArticlePageService {
         }
 
         return;
+    }
+
+    public function moveArticleToAnotherNode ($spaceId, $nodeId, $articleId, $toNodeId, $toPrevArticleId) {
+
     }
 }

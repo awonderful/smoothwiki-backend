@@ -19,9 +19,11 @@ class ArticlePageController extends Controller {
         $nodeId        = $request->input('nodeId');
 
         $service = new ArticlePageService();
-        $articles = $service->getArticles($spaceId, $nodeId, ['id', 'space_id as spaceId', 'node_id as nodeId', 'type', 'title', 'body', 'search', 'author', 'version', 'ctime', 'mtime']);
+        $articles = $service->getArticles($spaceId, $nodeId, ['id', 'space_id as spaceId', 'node_id as nodeId', 'type', 'title', 'body', 'search', 'level', 'author', 'version', 'ctime', 'mtime']);
+        $isWritable = $service->isPageWritable($spaceId, $nodeId);
         return Result::data([
-            'articles' => $articles->all(),
+            'articles'   => $articles->all(),
+            'isReadOnly' => !$isWritable
         ]);
     }
 
@@ -170,6 +172,7 @@ class ArticlePageController extends Controller {
                 'title'   => $article->title,
                 'body'    => $article->body,
                 'search'  => $article->search,
+                'level'   => $article->level,
                 'author'  => $article->author,
                 'version' => $article->version,
                 'ctime'   => $article->ctime,
@@ -177,5 +180,25 @@ class ArticlePageController extends Controller {
             ],
         ]);
     }
+
+    public function setArticleLevel(Request $request) {
+        $request->validate([
+            'spaceId'        => ['required', 'integer', 'min:1'],
+            'nodeId'         => ['required', 'integer', 'min:1'],
+            'articleId'      => ['required', 'integer', 'min:1'],
+            'level'          => ['required', 'integer', 'min:0', 'max:10'],
+        ]);
+
+        $spaceId   = $request->input('spaceId');
+        $nodeId    = $request->input('nodeId');
+        $articleId = $request->input('articleId');
+        $level     = $request->input('level');
+
+        $service = new ArticlePageService();
+        $article = $service->setArticleLevel($spaceId, $nodeId, $articleId, $level);
+        return Result::succ();
+    }
+
+
 }
  

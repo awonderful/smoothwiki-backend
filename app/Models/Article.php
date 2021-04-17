@@ -211,4 +211,14 @@ class Article extends Model
             }
         });
     }
+
+    public static function setArticleLevel(int $spaceId, int $nodeId, int $articleId, int $level): void {
+        static::where('space_id', $spaceId)
+                ->where('node_id', $nodeId)
+                ->where('id', $articleId)
+                ->where('deleted', 0)
+                ->update([
+                    'level' => $level
+                ]);
+    }
 }

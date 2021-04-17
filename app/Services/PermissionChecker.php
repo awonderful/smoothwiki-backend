@@ -9,7 +9,7 @@ use App\Exceptions\SpaceNotExistException;
 use Illuminate\Support\Facades\Auth;
 
 class PermissionChecker {
-    private static function getSpacePermission(int $spaceId, string $permisionType) {
+    public static function getSpacePermission(int $spaceId, string $permisionType): bool {
         $spacePermissionMapStr = session('spacePermissionMap');
         $spacePermissionMap = $spacePermissionMapStr !== null
                             ? json_decode($spacePermissionMapStr, true)

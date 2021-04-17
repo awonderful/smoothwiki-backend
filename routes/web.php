@@ -22,7 +22,8 @@ Auth::routes();
 Route::get('/home', 'HomeController@index')->name('home');
 
 Route::prefix('api')->middleware(['auth:web'])->group(function () {
-   
+    Route::get('viewer/get',       'UserController@getViewerInfo');
+    
     Route::get('tree/get',         'TreeController@getTree');
     Route::get('tree/node/append', 'TreeController@appendChildNode');
     Route::get('tree/node/rename', 'TreeController@renameNode');
@@ -36,6 +37,7 @@ Route::prefix('api')->middleware(['auth:web'])->group(function () {
     Route::get ('article-page/article/move',   'ArticlePageController@moveArticle');
     Route::get ('article-page/article/remove', 'ArticlePageController@removeArticle');
     Route::get ('article-page/article/get',    'ArticlePageController@getArticle');
+    Route::get ('article-page/article/level',  'ArticlePageController@setArticleLevel');
     Route::get ('article-page/get',            'ArticlePageController@getPage');
     Route::get ('article-page/version',        'ArticlePageController@getPageVersion');
 
