@@ -3,6 +3,7 @@
 namespace App\Exceptions;
 
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\Auth\AuthenticationException;
 use App\Libraries\Result;
 use Throwable;
 
@@ -40,6 +41,11 @@ class Handler extends ExceptionHandler
         parent::report($exception);
     }
 
+    protected function unauthenticated($request, AuthenticationException $exception)
+    {
+        return response()->json(Result::error('NOT_LOGGED_IN'));
+    }
+
     /**
      * Render an exception into an HTTP response.
      *
@@ -61,7 +67,8 @@ class Handler extends ExceptionHandler
             '\App\Exceptions\TreeNodeNotExistException' => 'TREE_NODE_NOT_EXIST',
             '\App\Exceptions\TreeNotExistException'     => 'TREE_NOT_EXIST',
             '\App\Exceptions\TreeUpdatedException'      => 'TREE_UPDATED',
-            '\App\Exceptions\PermissionDeniedException' => 'PERMISSION_DENIED'
+            '\App\Exceptions\PermissionDeniedException' => 'PERMISSION_DENIED',
+            '\App\Exceptions\DuplicateEmailException'   => 'DUPLICATE_EMAIL'
         ];
 
         if ($exception instanceof \Illuminate\Validation\ValidationException) {

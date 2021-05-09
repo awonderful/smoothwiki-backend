@@ -221,6 +221,8 @@ class ArticlePageService {
     }
 
     public function moveArticleToAnotherNode ($spaceId, $nodeId, $articleId, $toNodeId, $toPrevArticleId) {
-
+        PermissionChecker::writeSpace($spaceId);
+        PresenceChecker::node($spaceId, $nodeId);
+        PresenceChecker::node($spaceId, $toNodeId);
     }
 }

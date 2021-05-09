@@ -10,6 +10,13 @@ use Illuminate\Support\Facades\Auth;
 
 class PermissionChecker {
     public static function getSpacePermission(int $spaceId, string $permisionType): bool {
+        $spacePermissionTime = session('spacePermissionTime');
+        $now = time();
+        if ($now - $spacePermissionTime > 60 * 10) {
+            session('spacePermissionMap', '{}');
+            session('spacePermissionTime', $now);
+        }
+
         $spacePermissionMapStr = session('spacePermissionMap');
         $spacePermissionMap = $spacePermissionMapStr !== null
                             ? json_decode($spacePermissionMapStr, true)

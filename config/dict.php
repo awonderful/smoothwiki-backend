@@ -32,5 +32,6 @@ return [
 		'RICHTEXT'         => 1, //富文本
 		'MARKDOWN'         => 2, //MARKDOWN
 		'ATTACHMENT'       => 3, //附件
+		'MIND'             => 4, //脑图
 	],
 ];

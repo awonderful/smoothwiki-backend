@@ -22,7 +22,7 @@ Auth::routes();
 Route::get('/home', 'HomeController@index')->name('home');
 
 Route::prefix('api')->middleware(['auth:web'])->group(function () {
-    Route::get('viewer/get',       'UserController@getViewerInfo');
+    Route::get('user/info',       'UserController@getViewerInfo');
     
     Route::get('tree/get',         'TreeController@getTree');
     Route::get('tree/node/append', 'TreeController@appendChildNode');
