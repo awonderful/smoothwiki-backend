@@ -9,6 +9,7 @@ use App\Models\Attachment;
 use App\Exceptions\PageUpdatedException;
 use App\Exceptions\TreeNotExistException;
 use App\Exceptions\UnfinishedDBOperationException;
+use App\Exceptions\IllegalOperationException;
 use App\Services\PermissionChecker;
 use App\Services\PresenceChecker;
 use Illuminate\Database\Eloquent\Collection;
@@ -157,7 +158,7 @@ class ArticlePageService {
         PresenceChecker::node($spaceId, $nodeId);
 
         if ($articleId == $prevArticleId) {
-            throw new IllegalOperationException();
+            return;
         }
 
         $prevArticleIndex = -1;
@@ -224,5 +225,10 @@ class ArticlePageService {
         PermissionChecker::writeSpace($spaceId);
         PresenceChecker::node($spaceId, $nodeId);
         PresenceChecker::node($spaceId, $toNodeId);
+
+        if ($nodeId != $toNodeId) {
+            Article::moveArticleToAnotherNode($spaceId, $nodeId, $articleId, $toNodeId);
+        }
+        $this->moveArticle($spaceId, $toNodeId, $articleId, $toPrevArticleId);
     }
 }

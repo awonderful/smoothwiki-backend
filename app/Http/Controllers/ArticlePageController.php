@@ -130,6 +130,27 @@ class ArticlePageController extends Controller {
         return Result::succ();
     }
 
+    public function moveArticleToAnotherNode(Request $request) {
+          $request->validate([
+            'spaceId'         => ['required', 'integer', 'min:1'],
+            'nodeId'          => ['required', 'integer', 'min:1'],
+            'articleId'       => ['required', 'integer', 'min:1'],
+            'toNodeId'        => ['required', 'integer', 'min:1'],
+            'toPrevArticleId' => ['required', 'integer', 'min:0'],
+        ]);
+
+        $spaceId          = $request->input('spaceId');
+        $nodeId           = $request->input('nodeId');
+        $articleId        = $request->input('articleId');
+        $toNodeId         = $request->input('toNodeId');
+        $toPrevArticleId  = $request->input('toPrevArticleId');
+
+        $service = new ArticlePageService();
+        $article = $service->moveArticleToAnotherNode($spaceId, $nodeId, $articleId, $toNodeId, $toPrevArticleId);
+
+        return Result::succ();
+    }
+
     public function removeArticle(Request $request) {
          $request->validate([
             'spaceId'        => ['required', 'integer', 'min:1'],

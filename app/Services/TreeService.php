@@ -150,7 +150,7 @@ class TreeService {
     public function getTrashTree(int $spaceId, int $treeId): array {
         PermissionChecker::readSpace($spaceId);
 
-        $rows = TreeNode::getTrashNodes($spaceId, $treeId, [], ['id', 'pid', 'tree_id', 'type', 'title', 'version', 'mtime']);
+        $rows = TreeNode::getTrashNodes($spaceId, $treeId, [], ['id', 'space_id', 'pid', 'tree_id', 'type', 'title', 'version', 'mtime']);
 
         //generate the $map
         // [
@@ -232,7 +232,7 @@ class TreeService {
             $ts1 = strtotime($node1->mtime);
             $ts2 = strtotime($node2->mtime);
 
-            return $ts1 - $ts2;
+            return $ts2 - $ts1;
         });
 
         //return
@@ -248,9 +248,11 @@ class TreeService {
             $tree['hasChild'] = true;
             $tree['children'] = $nodes;
         }
+        $treeVersion = $this->getTreeVersion($spaceId, $treeId);
 
         return [
-            'tree' => $tree
+            'tree' => $tree,
+            'treeVersion' => $treeVersion
         ];
     }
 
@@ -281,6 +283,56 @@ class TreeService {
 
         //generate the $pidMap
         $rows = TreeNode::getNodes($spaceId, $treeId, [], ['id', 'pid']);
+        $pidMap = [];
+        foreach ($rows as $row) {
+            $pid = $row->pid;
+            if (!isset($pidMap[$pid])) {
+                $pidMap[$pid] = [];
+            }
+            $pidMap[$pid][] = $row;
+        }
+
+        //get the node
+        $curNode = null;
+        foreach ($rows as $row) {
+            if ($row->id === $nodeId) {
+                $curNode = $row;
+            }
+        }
+
+        //use a stack to find out all the descendent nodes
+        $descendentNodes = [];
+
+        $stack = [$curNode];
+        while (true) {
+            $node = array_pop($stack);
+            if ($node === null) {
+                break;
+            }
+
+            $descendentNodes[] = $node;
+            if (isset($pidMap[$node->id])) {
+                foreach ($pidMap[$node->id] as $childNode) {
+                    array_push($stack, $childNode);
+                }
+            }
+        }
+
+        return $descendentNodes;
+    }
+
+    /**
+     * get a trash node's all descendent nodes
+     * @param $spaceId
+     * @param $treeId
+     * @param $nodeId
+     * @return an array of node objects
+     */
+    public function getTrashDescendentNodes($spaceId, $treeId, $nodeId, $fields): array {
+        PermissionChecker::readSpace($spaceId);
+
+        //generate the $pidMap
+        $rows = TreeNode::getTrashNodes($spaceId, $treeId, [], ['id', 'pid']);
         $pidMap = [];
         foreach ($rows as $row) {
             $pid = $row->pid;
@@ -644,7 +696,7 @@ class TreeService {
     }
 
     /**
-     * remove a node and all its descendent nodes permanently
+     * remove a node and all its descendent nodes
      * @param int $spaceId
      * @param int $treeId
      * @param string $treeVersion
@@ -681,5 +733,48 @@ class TreeService {
         return TreeNode::modifyNodes($spaceId, $treeId, $treeVersion, $updates);
     }
 
+    /**
+     * restore a node and all its descendent nodes
+     * @param int $spaceId
+     * @param int $treeId
+     * @param string $treeVersion
+     * @param int $nodeId
+     * @return string the new version string of the tree
+     * @throws TreeUpdatedException, IllegalOperationException
+     */
+   public function restoreNodeRecursively(int $spaceId, int $treeId, string $treeVersion, int $nodeId): string {
+        PermissionChecker::writeSpace($spaceId);
+
+        $node = TreeNode::getTrashNodeById($spaceId, $treeId, $nodeId);
+        if (empty($node)) {
+            throw new TreeUpdatedException();
+        }
+
+        if ($node->pid == 0) {
+            throw new IllegalOperationException();
+        }
+
+        $latestTreeVersion = $this->getTreeVersion($spaceId, $treeId);
+        if ($latestTreeVersion != $treeVersion) {
+            throw new TreeUpdatedException();
+        }
+
+        //restore the node and all its decendent nodes;
+        $updates = [];
+        $restoreNodes = $this->getTrashDescendentNodes($spaceId, $treeId, $nodeId, ['id']);
+        foreach ($restoreNodes as $restoreNode) {
+            $updates[$restoreNode->id] = [
+                'deleted' => 0
+            ];
+        }
+
+        //set the node as the last child of the root node 
+        $rootNode = TreeNode::getRootNode($spaceId, $treeId);
+        $maxBrotherPos = TreeNode::getMaxChildPos($spaceId, $treeId, $rootNode->id);
+        $updates[$nodeId]['pid'] = $rootNode->id;
+        $updates[$nodeId]['pos'] = $maxBrotherPos + 1000;
+
+        return TreeNode::modifyTrashNodes($spaceId, $treeId, $treeVersion, $updates);
+    }
 
 }

@@ -44,6 +44,14 @@ class TreeNode extends Model
             ->first();
     }
 
+    public static function getTrashNodeById(int $spaceId, int $treeId, int $nodeId): ?TreeNode {
+         return static::where('space_id', $spaceId)
+            ->where('tree_id', $treeId)
+            ->where('deleted', 1)
+            ->where('id',      $nodeId)
+            ->first();
+    }
+
     public static function getRootNode(int $spaceId, int $treeId): ?TreeNode {
         return static::where('space_id', $spaceId)
             ->where('tree_id', $treeId)
@@ -87,6 +95,58 @@ class TreeNode extends Model
                     ->where('tree_id',  $treeId)
                     ->where('id',       $id)
                     ->where('deleted',  0)
+                    ->update($update);
+
+                if ($affectedRows != 1) {
+                    throw new TreeUpdatedException();
+                }
+            }
+
+            $newTreeVersion = util::version();
+            $affectedRows = static::where('space_id', $spaceId)
+                ->where('tree_id',  $treeId)
+                ->where('pid',      0)
+                ->where('version',  $treeVersion)
+                ->where('deleted',  0)
+                ->update([
+                    'version' => $newTreeVersion
+                ]);
+
+            if ($affectedRows != 1) {
+                throw new TreeUpdatedException();
+            }
+
+            return $newTreeVersion;
+        });
+    }
+
+    /**
+     * modify some trash nodes' attributes, and regenerate the root node's version in the meantime.
+     * @param int $spaceId
+     * @param int $treeId
+     * @param string $treeVersion
+     * @param array $updates
+     *      [
+     *          id1 => [
+     *              column1 => val1,
+     *              column2 => val2,
+     *              ...
+     *          ],
+     *          id2 => [
+     *              ...
+     *          ],
+     *          ...
+     *      ]
+     * @return string the new version string of the tree
+     * @throws TreeUpdatedException
+     */
+    public static function modifyTrashNodes(int $spaceId, int $treeId, string $treeVersion, array $updates): string {
+        return DB::transaction(function() use ($spaceId, $treeId, $treeVersion, $updates) {
+            foreach ($updates as $id => $update) {
+                $affectedRows = static::where('space_id', $spaceId)
+                    ->where('tree_id',  $treeId)
+                    ->where('id',       $id)
+                    ->where('deleted',  1)
                     ->update($update);
 
                 if ($affectedRows != 1) {

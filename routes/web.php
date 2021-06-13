@@ -24,22 +24,24 @@ Route::get('/home', 'HomeController@index')->name('home');
 Route::prefix('api')->middleware(['auth:web'])->group(function () {
     Route::get('user/info',       'UserController@getViewerInfo');
     
-    Route::get('tree/get',         'TreeController@getTree');
-    Route::get('tree/node/append', 'TreeController@appendChildNode');
-    Route::get('tree/node/rename', 'TreeController@renameNode');
-    Route::get('tree/node/remove', 'TreeController@removeNode');
-    Route::get('tree/node/move',   'TreeController@moveNode');
-    Route::get('tree/version',     'TreeController@getTreeVersion');
-    Route::get('tree/trash/get',   'TreeController@getTrashTree');
+    Route::get('tree/get',          'TreeController@getTree');
+    Route::get('tree/node/append',  'TreeController@appendChildNode');
+    Route::get('tree/node/rename',  'TreeController@renameNode');
+    Route::get('tree/node/remove',  'TreeController@removeNode');
+    Route::get('tree/node/restore', 'TreeController@restoreNode');
+    Route::get('tree/node/move',    'TreeController@moveNode');
+    Route::get('tree/version',      'TreeController@getTreeVersion');
+    Route::get('tree/trash/get',    'TreeController@getTrashTree');
 
-    Route::post('article-page/article/add',    'ArticlePageController@addArticle');
-    Route::post('article-page/article/update', 'ArticlePageController@updateArticle');
-    Route::get ('article-page/article/move',   'ArticlePageController@moveArticle');
-    Route::get ('article-page/article/remove', 'ArticlePageController@removeArticle');
-    Route::get ('article-page/article/get',    'ArticlePageController@getArticle');
-    Route::get ('article-page/article/level',  'ArticlePageController@setArticleLevel');
-    Route::get ('article-page/get',            'ArticlePageController@getPage');
-    Route::get ('article-page/version',        'ArticlePageController@getPageVersion');
+    Route::post('article-page/article/add',      'ArticlePageController@addArticle');
+    Route::post('article-page/article/update',   'ArticlePageController@updateArticle');
+    Route::get ('article-page/article/move',     'ArticlePageController@moveArticle');
+    Route::get ('article-page/article/transfer', 'ArticlePageController@moveArticleToAnotherNode');
+    Route::get ('article-page/article/remove',   'ArticlePageController@removeArticle');
+    Route::get ('article-page/article/get',      'ArticlePageController@getArticle');
+    Route::get ('article-page/article/level',    'ArticlePageController@setArticleLevel');
+    Route::get ('article-page/get',              'ArticlePageController@getPage');
+    Route::get ('article-page/version',          'ArticlePageController@getPageVersion');
 
     Route::post('attachment/upload',       'AttachmentController@upload');
     Route::post('attachment/upload/chunk', 'AttachmentController@uploadInChunks');

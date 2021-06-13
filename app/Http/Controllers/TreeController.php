@@ -138,6 +138,27 @@ class TreeController extends Controller {
         ]);
     }
 
+    public function restoreNode(Request $request) {
+        $request->validate([
+            'spaceId'     => ['required', 'integer', 'min:1'],
+            'treeId'      => ['required', 'integer', 'min:0'],
+            'treeVersion' => ['required', 'max:40'],
+            'nodeId'      => ['required', 'integer', 'min:1'],
+        ]);
+
+        $spaceId     = $request->input('spaceId');
+        $treeId      = $request->input('treeId');
+        $treeVersion = $request->input('treeVersion');
+        $nodeId      = $request->input('nodeId');
+
+        $service = new TreeService();
+        $newTreeVersion = $service->restoreNodeRecursively($spaceId, $treeId, $treeVersion, $nodeId);
+
+        return Result::data([
+            'treeVersion' => $newTreeVersion,
+        ]);
+    }
+
     public function getTrashTree(Request $request) {
         $request->validate([
             'spaceId'     => ['required', 'integer', 'min:1'],

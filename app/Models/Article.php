@@ -11,6 +11,7 @@ use App\Exceptions\ArticleUpdatedException;
 use App\Exceptions\ArticleNotExistException;
 use App\Exceptions\ArticleRemovedException;
 use App\Exceptions\PageUpdatedException;
+use App\Models\Attachment;
 
 class Article extends Model
 {
@@ -60,20 +61,29 @@ class Article extends Model
      * @throws UnfinishedDBOperationException
      */
     public static function addArticle(int $spaceId, int $nodeId, array $article, int $author): Article {
-        $newArticle = new Article();
-        $newArticle->space_id = $spaceId;
-        $newArticle->node_id  = $nodeId;
-        $newArticle->author   = $author;
-        $newArticle->pos      = 0;
-        $newArticle->version  = Util::version();
-        $newArticle->fill($article);
-        
-        $succ = $newArticle->save();
-        if (!$succ) {
-            throw new UnfinishedDBOperationException;
-        }
+        return DB::transaction(function() use ($spaceId, $nodeId, $article, $author) {
+            $pos = Article::where('node_id', $nodeId)->max('pos');
+            if (!is_numeric($pos)) {
+                $pos = 1000;
+            } else {
+                $pos += 1000;
+            }
 
-        return $newArticle;
+            $newArticle = new Article();
+            $newArticle->space_id = $spaceId;
+            $newArticle->node_id  = $nodeId;
+            $newArticle->author   = $author;
+            $newArticle->pos      = $pos;
+            $newArticle->version  = Util::version();
+            $newArticle->fill($article);
+            
+            $succ = $newArticle->save();
+            if (!$succ) {
+                throw new UnfinishedDBOperationException;
+            }
+
+            return $newArticle;
+        });
     }
 
 
@@ -220,5 +230,30 @@ class Article extends Model
                 ->update([
                     'level' => $level
                 ]);
+    }
+
+    public static function moveArticleToAnotherNode(int $spaceId, int $nodeId, int $articleId, int $toNodeId): void {
+        DB::transaction(function() use ($spaceId, $nodeId, $articleId, $toNodeId) {
+            $maxPos = static::where('space_id', $spaceId)
+                    ->where('node_id', $nodeId)
+                    ->max('pos');
+            if (!is_numeric($maxPos)) {
+                $maxPos = 0;
+            }
+            static::where('space_id', $spaceId)
+                    ->where('node_id', $nodeId)
+                    ->where('id', $articleId)
+                    ->where('deleted', 0)
+                    ->update([
+                        'node_id' => $toNodeId,
+                        'pos'     => $maxPos + 1000
+                    ]);
+            Attachment::where('space_id', $spaceId)
+                    ->where('node_id', $nodeId)
+                    ->where('article_id', $articleId)
+                    ->update([
+                        'node_id' => $toNodeId
+                    ]);
+        });
     }
 }
