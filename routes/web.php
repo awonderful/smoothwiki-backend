@@ -33,15 +33,17 @@ Route::prefix('api')->middleware(['auth:web'])->group(function () {
     Route::get('tree/version',      'TreeController@getTreeVersion');
     Route::get('tree/trash/get',    'TreeController@getTrashTree');
 
-    Route::post('article-page/article/add',      'ArticlePageController@addArticle');
-    Route::post('article-page/article/update',   'ArticlePageController@updateArticle');
-    Route::get ('article-page/article/move',     'ArticlePageController@moveArticle');
-    Route::get ('article-page/article/transfer', 'ArticlePageController@moveArticleToAnotherNode');
-    Route::get ('article-page/article/remove',   'ArticlePageController@removeArticle');
-    Route::get ('article-page/article/get',      'ArticlePageController@getArticle');
-    Route::get ('article-page/article/level',    'ArticlePageController@setArticleLevel');
-    Route::get ('article-page/get',              'ArticlePageController@getPage');
-    Route::get ('article-page/version',          'ArticlePageController@getPageVersion');
+    Route::post('article-page/article/add',         'ArticlePageController@addArticle');
+    Route::post('article-page/article/update',      'ArticlePageController@updateArticle');
+    Route::get ('article-page/article/move',        'ArticlePageController@moveArticle');
+    Route::get ('article-page/article/transfer',    'ArticlePageController@moveArticleToAnotherNode');
+    Route::get ('article-page/article/remove',      'ArticlePageController@removeArticle');
+    Route::get ('article-page/article/get',         'ArticlePageController@getArticle');
+    Route::get ('article-page/article/level',       'ArticlePageController@setArticleLevel');
+    Route::get ('article-page/article/versions',    'ArticlePageController@getArticleHistoryVersions');
+    Route::get ('article-page/article/history/get', 'ArticlePageController@getHistoryArticle');
+    Route::get ('article-page/get',                 'ArticlePageController@getPage');
+    Route::get ('article-page/version',             'ArticlePageController@getPageVersion');
 
     Route::post('attachment/upload',       'AttachmentController@upload');
     Route::post('attachment/upload/chunk', 'AttachmentController@uploadInChunks');
@@ -56,4 +58,6 @@ Route::prefix('api')->middleware(['auth:web'])->group(function () {
     Route::get('space/member/add',    'SpaceController@addSpaceMember');
     Route::get('space/member/remove', 'SpaceController@removeSpaceMember');
     Route::get('space/member/list',   'SpaceController@getSpaceMembers');
+
+    Route::get('search/space',        'SearchController@searchInSpace');
 });

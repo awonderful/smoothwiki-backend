@@ -5,9 +5,11 @@ namespace App\Services;
 use App\Models\Article;
 use App\Models\ArticleHistory;
 use App\Models\TreeNode;
+use App\Models\Users;
 use App\Models\Attachment;
 use App\Exceptions\PageUpdatedException;
 use App\Exceptions\TreeNotExistException;
+use App\Exceptions\ArticleNotExistException;
 use App\Exceptions\UnfinishedDBOperationException;
 use App\Exceptions\IllegalOperationException;
 use App\Services\PermissionChecker;
@@ -230,5 +232,49 @@ class ArticlePageService {
             Article::moveArticleToAnotherNode($spaceId, $nodeId, $articleId, $toNodeId);
         }
         $this->moveArticle($spaceId, $toNodeId, $articleId, $toPrevArticleId);
+    }
+
+    public function getArticleHistoryVersions ($spaceId, $nodeId, $articleId) {
+        PermissionChecker::readSpace($spaceId);
+
+        $article = Article::getArticleById($spaceId, $nodeId, $articleId);
+        if (empty($article)) {
+            $trashArticle = Article::getTrashArticleById($spaceId, $nodeId, $articleId);
+            if (empty($trashArticle)) {
+                throw new ArticleNotExistException();
+            }
+        }
+
+        $versions = ArticleHistory::getArticleHistoryVersions($articleId);
+
+        $userMap = [];
+        $uids = [];
+        foreach ($versions as $version) {
+            $uids[] = $version->author;
+        }
+        $users = Users::getUsers($uids);
+        foreach ($users as $user) {
+            $userMap[$user->id] = $user;
+        }
+
+        $items = [];
+        foreach ($versions as $version) {
+            $items[] = [
+                'version'    => $version->version,
+                'stime'      => $version->stime,
+                'author'     => $version->author,
+                'authorName' => isset($userMap[$version->author]) 
+                                ? $userMap[$version->author]->name
+                                : ''
+            ];
+        }
+
+        return $items;
+    }
+
+    public function getHistoryArticle ($spaceId, $nodeId, $articleId, $version) {
+        PermissionChecker::readSpace($spaceId);
+
+        return ArticleHistory::getArticle($articleId, $version);
     }
 }

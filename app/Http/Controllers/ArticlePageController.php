@@ -43,6 +43,45 @@ class ArticlePageController extends Controller {
         ]);
     }
 
+    public function getArticleHistoryVersions(Request $request) {
+         $request->validate([
+            'spaceId'       => ['required', 'integer', 'min:1'],
+            'nodeId'        => ['required', 'integer', 'min:1'],
+            'articleId'     => ['required', 'integer', 'min:1']
+        ]);
+
+        $spaceId   = $request->input('spaceId');
+        $nodeId    = $request->input('nodeId');
+        $articleId = $request->input('articleId');
+
+        $service = new ArticlePageService();
+        $versions = $service->getArticleHistoryVersions($spaceId, $nodeId, $articleId);
+
+        return Result::data([
+            'versions' => $versions,
+        ]);
+    }
+
+    public function getHistoryArticle(Request $request) {
+         $request->validate([
+            'spaceId'       => ['required', 'integer', 'min:1'],
+            'nodeId'        => ['required', 'integer', 'min:1'],
+            'articleId'     => ['required', 'integer', 'min:1'],
+            'version'       => ['required', 'string',  'min:1'],
+        ]);
+
+        $spaceId   = $request->input('spaceId');
+        $nodeId    = $request->input('nodeId');
+        $articleId = $request->input('articleId');
+        $version   = $request->input('version');
+
+        $service = new ArticlePageService();
+        $article = $service->getHistoryArticle($spaceId, $nodeId, $articleId, $version);
+        return Result::data([
+            'article' => $article,
+        ]);
+    }
+
     public function addArticle(Request $request) {
          $request->validate([
             'spaceId'       => ['required', 'integer', 'min:1'],

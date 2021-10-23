@@ -34,4 +34,11 @@ return [
 		'ATTACHMENT'       => 3, //附件
 		'MIND'             => 4, //脑图
 	],
+	'SearchType'         => [
+		'SPACE_TITLE'      => 1, //空间名称搜索
+		'SPACE_DESC'       => 2, //空间描述搜索
+		'NODE_TITLE'       => 3, //节点名称搜索
+		'ARTICLE_TITLE'    => 4, //文章名称搜索
+		'ARTICLE_BODY'     => 5, //文章内容搜索
+	]
 ];

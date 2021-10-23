@@ -39,6 +39,15 @@ class Article extends Model
                     ->first();
     }
 
+    public static function getTrashArticleById(int $spaceId, int $nodeId, int $articleId): Article {
+        return static::where('space_id', $spaceId)
+                    ->where('node_id',   $nodeId)
+                    ->where('id',        $articleId)
+                    ->where('deleted',   1)
+                    ->first();
+    }
+
+
     public static function getMaxArticlePos(int $spaceId, int $nodeId): ?int {
         return static::where('space_id', $spaceId)
                     ->where('node_id',   $nodeId)
@@ -74,6 +83,7 @@ class Article extends Model
             $newArticle->node_id  = $nodeId;
             $newArticle->author   = $author;
             $newArticle->pos      = $pos;
+            $newArticle->stime    = DB::raw('NOW()');
             $newArticle->version  = Util::version();
             $newArticle->fill($article);
             
@@ -165,7 +175,7 @@ class Article extends Model
             $articleHistory->ext        = $curArticle->ext;
             $articleHistory->version    = $curArticle->version;
             $articleHistory->author     = $curArticle->author;
-            $articleHistory->ctime      = $curArticle->ctime;
+            $articleHistory->stime      = $curArticle->stime;
             $succ = $articleHistory->save();
             if (!$succ) {
                 throw new UnfinishedDBOperationException();
@@ -182,6 +192,7 @@ class Article extends Model
                 'body'    => $article['body'],
                 'search'  => $article['search'],
                 'author'  => $author,
+                'stime'   => DB::raw('NOW()'),
                 'version' => $newVersion,
             ]);
             if ($affectedRows !== 1) {
