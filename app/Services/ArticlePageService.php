@@ -26,6 +26,12 @@ class ArticlePageService {
         return Article::getArticles($spaceId, $nodeId, $fields);
     }
 
+    public function getTrashArticles(int $spaceId, int $nodeId, $fields): Collection {
+        PermissionChecker::readSpace($spaceId);
+
+        return Article::getTrashArticles($spaceId, $nodeId, $fields);
+    }
+
     public function isPageWritable(int $spaceId, $nodeId): bool {
         $rows = TreeNode::getTrashNodes($spaceId, 1, ['id' => $nodeId]);
         if ($rows->isNotEmpty()){

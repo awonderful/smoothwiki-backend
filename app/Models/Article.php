@@ -267,4 +267,12 @@ class Article extends Model
                     ]);
         });
     }
+
+    public static function getTrashArticles(int $spaceId, int $nodeId, $fields = ['*']): Collection {
+        return static::where('space_id', $spaceId)
+                    ->where('node_id',   $nodeId)
+                    ->where('deleted',   1)
+                    ->orderBy('mtime', 'desc')
+                    ->get($fields);
+    }
 }

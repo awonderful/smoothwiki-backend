@@ -19,7 +19,7 @@ class ArticlePageController extends Controller {
         $nodeId        = $request->input('nodeId');
 
         $service = new ArticlePageService();
-        $articles = $service->getArticles($spaceId, $nodeId, ['id', 'space_id as spaceId', 'node_id as nodeId', 'type', 'title', 'body', 'search', 'level', 'author', 'version', 'ctime', 'mtime']);
+        $articles = $service->getArticles($spaceId, $nodeId, ['id', 'space_id as spaceId', 'node_id as nodeId', 'type', 'title', 'body', 'search', 'level', 'author', 'version', 'ctime', 'stime', 'mtime']);
         $isWritable = $service->isPageWritable($spaceId, $nodeId);
         return Result::data([
             'articles'   => $articles->all(),
@@ -259,6 +259,19 @@ class ArticlePageController extends Controller {
         return Result::succ();
     }
 
+    public function getPageTrashArticles(Request $request) {
+        $request->validate([
+            'spaceId'       => ['required', 'integer', 'min:1'],
+            'nodeId'        => ['required', 'integer', 'min:1'],
+        ]);
 
+        $spaceId       = $request->input('spaceId');
+        $nodeId        = $request->input('nodeId');
+
+        $service = new ArticlePageService();
+        $articles = $service->getTrashArticles($spaceId, $nodeId, ['id', 'space_id as spaceId', 'node_id as nodeId', 'type', 'title', 'body', 'search', 'level', 'author', 'version', 'ctime', 'stime', 'mtime']);
+        return Result::data([
+            'articles'   => $articles->all()
+        ]);
+    }
 }
- 

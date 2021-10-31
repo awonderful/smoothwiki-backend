@@ -44,6 +44,7 @@ Route::prefix('api')->middleware(['auth:web'])->group(function () {
     Route::get ('article-page/article/history/get', 'ArticlePageController@getHistoryArticle');
     Route::get ('article-page/get',                 'ArticlePageController@getPage');
     Route::get ('article-page/version',             'ArticlePageController@getPageVersion');
+    Route::get ('article-page/trash/get',           'ArticlePageController@getPageTrashArticles');
 
     Route::post('attachment/upload',       'AttachmentController@upload');
     Route::post('attachment/upload/chunk', 'AttachmentController@uploadInChunks');
