@@ -316,4 +316,15 @@ class TreeNode extends Model
             return $newTreeVersions;
         });
     }
+
+
+    public static function getMultiTreesNodes(array $spaceIds = [], array $conditions = [], array $fields = ['*']): collection {
+        return static::whereIn('space_id', $spaceIds)
+            ->where('deleted', 0)
+            ->where($conditions)
+            ->orderby('pos', 'asc')
+            ->get($fields);
+    }
+
+
 }

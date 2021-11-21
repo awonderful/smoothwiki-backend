@@ -21,30 +21,44 @@ class Search
 
 		$nodeTitleConditions = [];
 		$articleTitleConditions = [];
+		$articleBodyConditions = [];
 		foreach ($keywords as $keyword) {
 			$nodeTitleConditions[] = ['title', 'like', "%{$keyword}%"];
 			$articleTitleConditions[] = ['title', 'like', "%{$keyword}%"];
+			$articleBodyConditions[] = ['search', 'like', "%{$keyword}%"];
 		}
 
 		$nodeTitle = DB::table('tree_node')
-							->select('id', 'title AS rstitle',  DB::raw("'' as rscnt"), DB::raw(config('dict.SearchType.NODE_TITLE').' AS searchType'))
+							->select('id', 'title',  DB::raw("'' as content"), DB::raw('pid AS belongId'), DB::raw(config('dict.SearchType.NODE_TITLE').' AS searchType'))
 		          ->where('space_id', $spaceId)
+							->where('pid', '>', 0)
 							->where('deleted', 0)
 							->where($nodeTitleConditions);
 		$articleTitle = DB::table('article')
-							->select('id', 'title AS rstitle', 'search as rscnt', DB::raw(config('dict.SearchType.ARTICLE_TITLE').' AS searchType'))
+							->select('id', 'title', 'search as content', DB::raw('node_id AS belongId'), DB::raw(config('dict.SearchType.ARTICLE_TITLE').' AS searchType'))
 							->where('space_id', $spaceId)
 							->where('deleted', 0)
-							->where($articleTitleConditions);
+							->where($articleTitleConditions)
+							->whereIn('node_id', function($query) use ($spaceId) {
+								$query->select('id')
+											->from('tree_node')
+											->where('space_id', $spaceId)
+											->where('deleted', 0);
+							});
 		$articleBody = DB::table('article')
-							->select('id', 'title as rstitle', 'search AS rscnt', DB::raw(config('dict.SearchType.ARTICLE_BODY').' AS searchType'))
+							->select('id', 'title', 'search AS content', DB::raw('node_id AS belongId'), DB::raw(config('dict.SearchType.ARTICLE_BODY').' AS searchType'))
 							->where('space_id', $spaceId)
 							->where('deleted', 0)
-							->whereRaw('MATCH(search) AGAINST(?)', array($keywordStr));
+							->where($articleBodyConditions)
+							->whereIn('node_id', function($query) use ($spaceId) {
+								$query->select('id')
+											->from('tree_node')
+											->where('space_id', $spaceId)
+											->where('deleted', 0);
+							});
 		return $nodeTitle
 						->union($articleTitle)
 						->union($articleBody)
 						->get();
 	}
-
 }

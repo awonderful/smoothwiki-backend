@@ -58,7 +58,7 @@ class TreeService {
     public function getTree(int $spaceId, int $treeId): array {
         PermissionChecker::readSpace($spaceId);
 
-        $rows = TreeNode::getNodes($spaceId, $treeId, [], ['id', 'pid', 'tree_id', 'type', 'title', 'version']);
+        $rows = TreeNode::getNodes($spaceId, $treeId, [], ['id', 'pid', 'tree_id', 'type', 'title', 'pos', 'version']);
         if ($rows->isEmpty()) {
             throw new TreeNotExistException();
         }

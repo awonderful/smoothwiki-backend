@@ -275,4 +275,11 @@ class Article extends Model
                     ->orderBy('mtime', 'desc')
                     ->get($fields);
     }
+
+    public static function getArticlesFromMultiplePages(array $nodeIds, $fields = ['*']): Collection {
+        return static::whereIn('node_id', $nodeIds)
+                    ->where('deleted', 0)
+                    ->orderBy('pos', 'asc')
+                    ->get($fields);
+    }
 }
