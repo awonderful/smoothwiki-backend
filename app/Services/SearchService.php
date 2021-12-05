@@ -13,20 +13,63 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 
 class SearchService {
-		public function searchInSpace(int $spaceId, string $keyword) {
-			PermissionChecker::readSpace($spaceId);
+		public function search(string $range, string $keyword, int $whichPage, int $pageSize, int $spaceId) {
+			$data = null;
 
-			$items = Search::searchInSpace($spaceId, $keyword)->toArray();
-			foreach ($items as $idx => $item) {
-				$items[$idx]->spaceId = $spaceId;
+			switch ($range) {
+				case 'space':
+					$data = Search::searchInSpace($spaceId, $keyword, $whichPage, $pageSize);
+					break;
+
+				case 'user':
+					$uid = Auth::id();
+					$data = Search::searchInUser($uid, $keyword, $whichPage, $pageSize);
+					break;
+
+				case 'site':
+					$uid = Auth::id();
+					$data = Search::searchInSite($uid, $keyword, $whichPage, $pageSize);
+					break;
 			}
 
+			$items = [];
+			foreach ($data['items'] as $item ) {
+				$items[] = (object) [
+					'spaceId'       => $item->space_id,
+					'spaceDeleted'  => $item->space_deleted,
+					'objectType'    => $item->object_type,
+					'objectId'      => $item->object_id,
+					'objectTitle'   => $item->object_title,
+					'objectContent' => $item->object_content,
+				];
+			}
 			$richItems = $this->enrichSearchResult($items);
 
-			return $richItems;
+			return [
+				'count' => $data['count'],
+				'items' => $richItems,
+				'whichPage' => $whichPage,
+				'pageSize'  => $pageSize,
+				'pageCount' => intval(($data['count'] + $pageSize - 1) / $pageSize)
+			];
 		}
 
-		private function enrichSearchResult($items) {
+		private function enrichSearchResult(array $items) {
+			//nodeId
+			$articleIds = [];
+			$articleMap = [];
+			foreach ($items as $idx => $item) {
+				$articleIds[] = $item->objectId;
+			}
+			$articles = Article::getArticlesByIds($articleIds);
+			foreach ($articles as $article) {
+				$articleMap[$article->id] = $article;
+			}
+			foreach ($items as $idx => $item) {
+				$items[$idx]->nodeId = $articleMap[$item->objectId]->node_id;
+			}
+
+			//spaceType, spaceTitle
 			$spaceIds = [];
 			foreach ($items as $idx => $item) {
 				array_push($spaceIds, $item->spaceId);
@@ -44,6 +87,7 @@ class SearchService {
 				}
 			}
 
+			//path, children
 			$nodeMap = [];
 			$pnodeMap = [];
 			$nodes = TreeNode::getMultiTreesNodes($spaceIds);
@@ -57,13 +101,13 @@ class SearchService {
 				$nodeMap[$node->id] = $node;
 			}
 			foreach ($items as $idx => $item) {
-				if ($item->searchType === config('dict.SearchType.NODE_TITLE')) {
+				if ($item->objectType === config('dict.SearchObjectType.TREE_NODE')) {
 					$path = [];
-					if (!isset($nodeMap[$item->id])) {
+					if (!isset($nodeMap[$item->objectId])) {
 						continue;
 					}
 
-					array_push($path, $nodeMap[$item->id]);
+					array_push($path, $nodeMap[$item->objectId]);
 					while (true) {
 						$curNode = $path[count($path) - 1];
 						if (!isset($nodeMap[$curNode->pid])) {
@@ -72,8 +116,8 @@ class SearchService {
 						array_push($path, $nodeMap[$curNode->pid]);
 					}
 
-					$children = isset($pnodeMap[$item->id])
-										? $pnodeMap[$item->id]
+					$children = isset($pnodeMap[$item->objectId])
+										? $pnodeMap[$item->objectId]
 										: null;
 
 					$items[$idx]->path = array_reverse($path);
@@ -82,13 +126,13 @@ class SearchService {
 					}
 				}
 
-				if ($item->searchType === config('dict.SearchType.ARTICLE_TITLE') || $item->searchType === config('dict.SearchType.ARTICLE_BODY')) {
+				if ($item->objectType === config('dict.SearchObjectType.ARTICLE')) {
 					$path = [];
-					if (!isset($nodeMap[$item->belongId])) {
+					if (!isset($nodeMap[$item->nodeId])) {
 						continue;
 					}
 
-					array_push($path, $nodeMap[$item->belongId]);
+					array_push($path, $nodeMap[$item->nodeId]);
 					while (true) {
 						$curNode = $path[count($path) - 1];
 						if (!isset($nodeMap[$curNode->pid])) {
@@ -101,23 +145,27 @@ class SearchService {
 				}
 			}
 
+			//articles
 			$nodeIds = [];
 			foreach ($items as $item) {
-				if ($item->searchType === config('dict.SearchType.NODE_TITLE')) {
-					array_push($nodeIds, $item->id);
+				if ($item->objectType === config('dict.SearchObjectType.TREE_NODE')) {
+					array_push($nodeIds, $item->objectId);
 				}
 			}
 			if (count($nodeIds) > 0) {
-				$articles = Article::getArticlesFromMultiplePages($nodeIds, ['id', 'type', 'title']);
-				$nodeIdArticleMap = [];
+				$articles = Article::getArticlesFromMultiplePages($nodeIds, ['id', 'type', 'title', 'node_id']);
+				$nodeIdArticlesMap = [];
 				foreach ($articles as $article) {
-					$nodeIdArticleMap[$article->node_id] = $article;
+					if (!isset($nodeIdArticlesMap[$article->node_id])) {
+						$nodeIdArticlesMap[$article->node_id] = [];
+					}
+					$nodeIdArticlesMap[$article->node_id][] = $article;
 				}
 				foreach ($items as $idx => $item) {
-					if ($item->searchType === config('dict.SearchType.NODE_TITLE') && isset($nodeIdArticleMap[$item->id])) {
+					if ($item->objectType === config('dict.SearchObjectType.TREE_NODE')) {
 						$cntArticles = [];
-						foreach ($nodeIdArticleMap[$item->id] as $article) {
-							array_push($cntArticle, [
+						foreach ($nodeIdArticlesMap[$item->objectId] as $article) {
+							array_push($cntArticles, [
 								'id'    => $article->id,
 								'type'  => $article->type,
 								'title' => $article->title,

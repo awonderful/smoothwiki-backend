@@ -58,6 +58,7 @@ class Handler extends ExceptionHandler
     public function render($request, Throwable $exception)
     {
         $map = [
+            '\App\Exceptions\SpaceNotExistException'    => 'SPACE_NOT_EXIST',
             '\App\Exceptions\ArticleNotExistException'  => 'ARTICLE_NOT_EXIST',
             '\App\Exceptions\ArticleRemovedException'   => 'ARTICLE_REMOVED',
             '\App\Exceptions\ArticleUpdatedException'   => 'ARTICLE_UPDATED',

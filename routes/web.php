@@ -60,5 +60,5 @@ Route::prefix('api')->middleware(['auth:web'])->group(function () {
     Route::get('space/member/remove', 'SpaceController@removeSpaceMember');
     Route::get('space/member/list',   'SpaceController@getSpaceMembers');
 
-    Route::get('search/space',        'SearchController@searchInSpace');
+    Route::get('search',        'SearchController@search');
 });

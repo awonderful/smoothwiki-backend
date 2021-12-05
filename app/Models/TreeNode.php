@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Collection;
 use App\Libraries\Util;
 use App\Exceptions\TreeUpdatedException;
+use App\Models\Search;
 
 class TreeNode extends Model
 {
@@ -100,6 +101,21 @@ class TreeNode extends Model
                 if ($affectedRows != 1) {
                     throw new TreeUpdatedException();
                 }
+
+                if (isset($update['title'])) {
+                    Search::updateObject($spaceId, [
+                        'type'    => config('dict.SearchObjectType.TREE_NODE'),
+                        'id'      => $id,
+                        'title'   => $update['title']
+                    ]);
+                }
+                if (isset($update['deleted'])) {
+                     Search::updateObject($spaceId, [
+                        'type'    => config('dict.SearchObjectType.TREE_NODE'),
+                        'id'      => $id,
+                        'deleted' => $update['deleted']
+                    ]);
+                }
             }
 
             $newTreeVersion = util::version();
@@ -151,6 +167,13 @@ class TreeNode extends Model
 
                 if ($affectedRows != 1) {
                     throw new TreeUpdatedException();
+                }
+                if (isset($update['deleted'])) {
+                     Search::updateObject($spaceId, [
+                        'type'    => config('dict.SearchObjectType.TREE_NODE'),
+                        'id'      => $id,
+                        'deleted' => $update['deleted']
+                    ]);
                 }
             }
 
@@ -214,6 +237,13 @@ class TreeNode extends Model
             if ($affectedRows != 1) {
                 throw new TreeUpdatedException();
             }
+
+            Search::insertObject($spaceId, [
+                'type'    => config('dict.SearchObjectType.TREE_NODE'),
+                'id'      => $treeNode->id,
+                'title'   => $node['title'],
+                'content' => ''
+            ]);
 
             return [
                 'nodeId' => $treeNode->id,

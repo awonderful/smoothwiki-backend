@@ -8,6 +8,7 @@ return [
 	'API_NOT_EXIST'        => 'API不存在',
 	'INVALID_PARAM'        => '参数有误',
 
+	'SPACE_NOT_EXIST'      => '空间不存在',
 	'TREE_UPDATED'         => '树结点已经发生变化，请刷新后重试',
 	'TREE_NOT_EXIST'       => '树不存在',
 	'ARTICLE_UPDATED'      => '文章已经发生变化，请刷新后再编辑保存',

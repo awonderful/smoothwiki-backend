@@ -12,6 +12,7 @@ use App\Exceptions\ArticleNotExistException;
 use App\Exceptions\ArticleRemovedException;
 use App\Exceptions\PageUpdatedException;
 use App\Models\Attachment;
+use App\Models\Search;
 
 class Article extends Model
 {
@@ -92,6 +93,13 @@ class Article extends Model
                 throw new UnfinishedDBOperationException;
             }
 
+            Search::insertObject($spaceId, [
+                'type'    => config('dict.SearchObjectType.ARTICLE'),
+                'id'      => $newArticle->id,
+                'title'   => $article['title'],
+                'content' => $article['search']
+            ]);
+
             return $newArticle;
         });
     }
@@ -132,6 +140,12 @@ class Article extends Model
             if ($affectedRows !== 1) {
                 throw new UnfinishedDBOperationException();
             }
+
+            Search::updateObject($spaceId, [
+                'type'    => config('dict.SearchObjectType.ARTICLE'),
+                'id'      => $articleId,
+                'deleted' => 1
+            ]);
         });
     }
 
@@ -198,6 +212,13 @@ class Article extends Model
             if ($affectedRows !== 1) {
                 throw new UnfinishedDBOperationException();
             }
+
+            Search::updateObject($spaceId, [
+                'type'    => config('dict.SearchObjectType.ARTICLE'),
+                'id'      => $articleId,
+                'title'   => $article['title'],
+                'content' => $article['search']
+            ]);
 
             return $newVersion;
         });
@@ -281,5 +302,10 @@ class Article extends Model
                     ->where('deleted', 0)
                     ->orderBy('pos', 'asc')
                     ->get($fields);
+    }
+
+    public static function getArticlesByIds(array $articleIds): Collection {
+        return static::whereIn('id', $articleIds)
+                    ->get(['*']);
     }
 }

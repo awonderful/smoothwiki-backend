@@ -2,21 +2,21 @@
 
 return [
 	'SUCC'              => 100,
-  'SYSTEM_ERROR'      => 101,
-  'NOT_LOGGED_IN'     => 102,
+	'SYSTEM_ERROR'      => 101,
+	'NOT_LOGGED_IN'     => 102,
 	'PERMISSION_DENIED' => 103,
 	'API_NOT_EXIST'     => 104,
 	'INVALID_PARAM'     => 105,
 	'ILLEGAL_OPERATION' => 106,
 
-  'SPACE_NOT_EXIST' => 1001,
+    'SPACE_NOT_EXIST'   => 1001,
 
-	'TREE_UPDATED'    => 2001,
-	'TREE_NOT_EXIST'  => 2002,
+	'TREE_UPDATED'      => 2001,
+	'TREE_NOT_EXIST'    => 2002,
 
-	'ARTICLE_UPDATED' => 3001,
-	'PAGE_UPDATED'    => 3002,
-	'PAGE_NOT_EXIST'  => 3003,
+	'ARTICLE_UPDATED'   => 3001,
+	'PAGE_UPDATED'      => 3002,
+	'PAGE_NOT_EXIST'    => 3003,
 
 	'SPACE_MENU_NOT_EXIST' => 4001,
 

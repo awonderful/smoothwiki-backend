@@ -8,19 +8,28 @@ use App\Services\SearchService;
 use Illuminate\Http\Request;
 
 class SearchController extends Controller {
-    public function searchInSpace(Request $request) {
+    public function search(Request $request) {
         $request->validate([
-            'spaceId'     => ['required', 'integer', 'min:1'],
-            'keyword'     => ['required', 'string',  'min:1']
+            'spaceId'     => ['nullable', 'integer', 'min:0'],
+            'keyword'     => ['required', 'string',  'min:1'],
+            'pageSize'    => ['required', 'integer', 'min:1', 'max:100'],
+            'whichPage'   => ['required', 'integer', 'min:1'],
+            'range'       => ['required', 'string'],
         ]);
 
-        $spaceId = $request->input('spaceId');
-        $keyword = $request->input('keyword');
+        $range     = $request->input('range');
+        $spaceId   = $request->input('spaceId', 0);
+        $whichPage = $request->input('whichPage');
+        $pageSize  = $request->input('pageSize');
+        $keyword   = $request->input('keyword');
+
+        $symbols = ['-', '+', '<', '>', '@', '(', ')', '{', '}', '~', "'", '"', '`', '?', '%', '=', '*', '&', '^', '$', '#', ':', '[', ']', '|', '/', '\\'];
+        $keyword = str_replace($symbols, '', $keyword);
+        $keyword = preg_replace('/ {1,}/', '', $keyword);
+        $keyword = trim($keyword);
 
         $service = new SearchService();
-        $items = $service->searchInSpace($spaceId, $keyword);
-        return Result::data([
-            'items' => $items,
-        ]);
+        $data = $service->search($range, $keyword, $whichPage, $pageSize, $spaceId);
+        return Result::data($data);
     }
 }

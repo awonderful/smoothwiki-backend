@@ -7,7 +7,10 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use App\Models\SpaceMember;
 use App\Models\TreeNode;
+use App\Models\Search;
 use App\Libraries\Util;
+use App\Exceptions\UnfinishedDBOperationException;
+use App\Exceptions\SpaceNotExistException;
 
 class Space extends Model
 {
@@ -33,35 +36,53 @@ class Space extends Model
 
             SpaceMember::addMember($spaceId, $creator, config('dict.SpaceMemberRole.CREATOR'));
             TreeNode::createRootNode($spaceId, 1, $title);
+            Search::insertObject($spaceId, [
+                'type'    => config('dict.SearchObjectType.SPACE'),
+                'id'      => $spaceId,
+                'title'   => $title,
+                'content' => $desc
+            ]);
 
             return $spaceId;
         });
     }
 
     public static function modifySpace(int $spaceId, string $title, string $desc, $othersRead, $othersWrite): void {
-        $affectedRows = static::where('id', $spaceId)
-            ->where('deleted', 0)
-            ->update([
-                'title'        => $title,
-                'desc'         => $desc,
-                'others_read'  => $othersRead,
-                'others_write' => $othersWrite
-            ]);
+        DB::transaction(function() use($spaceId, $title, $desc, $othersRead, $othersWrite) {
+            $affectedRows = static::where('id', $spaceId)
+                ->where('deleted', 0)
+                ->update([
+                    'title'        => $title,
+                    'desc'         => $desc,
+                    'others_read'  => $othersRead,
+                    'others_write' => $othersWrite
+                ]);
 
-        if ($affectedRows != 1) {
-            throw new SpaceNotExistException();
-        }
+            if ($affectedRows != 1) {
+                throw new SpaceNotExistException();
+            }
+
+            Search::updateObject($spaceId, [
+                'type'    => config('dict.SearchObjectType.SPACE'),
+                'id'      => $spaceId,
+                'title'   => $title,
+                'content' => $desc
+            ]);
+        });
     }
 
     public static function removeSpace(int $spaceId): void {
-        static::where('id', $spaceId)
-            ->where('deleted', 0)
-            ->update([
-                'deleted' => 1
-            ]);
+        DB::transaction(function() use($spaceId) {
+            static::where('id', $spaceId)
+                ->where('deleted', 0)
+                ->update([
+                    'deleted' => 1
+                ]);
+            Search::setIsSpaceDeleted($spaceId, 1);
+        });
     }
 
-    public static function getSpaceById(int $spaceId): Space {
+    public static function getSpaceById(int $spaceId): ?Space {
         return static::where('id', $spaceId)
             ->where('deleted', 0)
             ->first();
