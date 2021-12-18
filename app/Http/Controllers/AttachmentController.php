@@ -106,7 +106,7 @@ class AttachmentController extends Controller {
         return Storage::download($attachment->store_filename, $attachment->original_filename, $headers);
     }
 
-    public function getAttachments(Request $request) {
+    public function getArticleAttachments(Request $request) {
          $request->validate([
             'spaceId'   => ['required', 'integer', 'min:1'],
             'nodeId'    => ['required', 'integer', 'min:1'],
@@ -118,7 +118,25 @@ class AttachmentController extends Controller {
         $articleId = $request->input('articleId');
 
         $service = new AttachmentService();
-        $attachments = $service->getAttachments($spaceId, $nodeId, $articleId, ['id', 'original_filename', 'extension', 'size', 'uploader', 'ctime', 'mtime']);
+        $attachments = $service->getArticleAttachments($spaceId, $nodeId, $articleId, ['id', 'original_filename', 'extension', 'size', 'uploader', 'ctime', 'mtime']);
+
+        return Result::data([
+            'attachments'  => $attachments->toArray()
+        ]);
+    }
+
+    public function getAttachmentsByIds(Request $request) {
+         $request->validate([
+            'spaceId'       => ['required', 'integer', 'min:1'],
+            'attachmentIds' => ['required', 'string',  'regex:/^\d+(,\d+)*$/'],
+        ]);
+
+        $spaceId          = $request->input('spaceId');
+        $attachmentIdsStr = $request->input('attachmentIds');
+        $attachmentIds    = explode(',', $attachmentIdsStr);
+
+        $service = new AttachmentService();
+        $attachments = $service->getAttachmentsByIds($spaceId,  $attachmentIds, ['id', 'original_filename', 'extension', 'size', 'uploader', 'ctime', 'mtime']);
 
         return Result::data([
             'attachments'  => $attachments->toArray()

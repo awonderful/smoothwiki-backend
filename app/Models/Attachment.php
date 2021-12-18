@@ -49,10 +49,18 @@ class Attachment extends Model
             ->update(['article_id' => $articleId]);
     }
 
-    public static function getAttachments(int $spaceId, int $nodeId, int $articleId, array $fields = ['*']): Collection {
+    public static function getArticleAttachments(int $spaceId, int $nodeId, int $articleId, array $fields = ['*']): Collection {
         return static::where('space_id', $spaceId)
             ->where('node_id', $nodeId)
             ->where('article_id', $articleId)
+            ->where('deleted', 0)
+            ->select(...$fields)
+            ->get();
+    }
+
+    public static function getAttachmentsByIds(int $spaceId, array $attachmentIds, array $fields = ['*']): Collection {
+        return static::where('space_id', $spaceId)
+            ->whereIn('id', $attachmentIds)
             ->where('deleted', 0)
             ->select(...$fields)
             ->get();

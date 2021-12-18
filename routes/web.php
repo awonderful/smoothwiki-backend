@@ -49,7 +49,8 @@ Route::prefix('api')->middleware(['auth:web'])->group(function () {
     Route::post('attachment/upload',       'AttachmentController@upload');
     Route::post('attachment/upload/chunk', 'AttachmentController@uploadInChunks');
     Route::get ('attachment/download',     'AttachmentController@download');
-    Route::get ('attachment/list',         'AttachmentController@getAttachments');
+    Route::get ('attachment/list/article', 'AttachmentController@getArticleAttachments');
+    Route::get ('attachment/list/ids',     'AttachmentController@getAttachmentsByIds');
 
     Route::get('space/list',          'SpaceController@getSpaces');
     Route::post('space/create',       'SpaceController@createSpace');

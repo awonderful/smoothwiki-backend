@@ -40,10 +40,16 @@ class AttachmentService {
         return $attachment;
     }
 
-    public function getAttachments(int $spaceId, int $nodeId, int $articleId, array $fields = ['*']): Collection {
+    public function getArticleAttachments(int $spaceId, int $nodeId, int $articleId, array $fields = ['*']): Collection {
         PermissionChecker::readSpace($spaceId);
 
-        return Attachment::getAttachments($spaceId, $nodeId, $articleId, $fields);
+        return Attachment::getArticleAttachments($spaceId, $nodeId, $articleId, $fields);
+    }
+
+    public function getAttachmentsByIds(int $spaceId, array $attachmentIds, array $fields = ['*']): Collection {
+        PermissionChecker::readSpace($spaceId);
+
+        return Attachment::getAttachmentsByIds($spaceId, $attachmentIds, $fields);
     }
 
     //--------------------------upload large file--------------------------------

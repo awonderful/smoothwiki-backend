@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Collection;
 use App\Libraries\Util;
 use App\Exceptions\TreeUpdatedException;
+use App\Exceptions\IllegalOperationException;
+use App\Exceptions\UnfinishedDBOperationException;
 use App\Models\Search;
 
 class TreeNode extends Model
@@ -336,7 +338,7 @@ class TreeNode extends Model
                 $treeId      = $tmp['treeId'];
                 $treeVersion = $tmp['treeVersion'];
                 $updates     = $tmp['updates'];
-                $newTreeVersion = modifyNodes($spaceId, $treeId, $treeVersion, $updates);
+                $newTreeVersion = static::modifyNodes($spaceId, $treeId, $treeVersion, $updates);
 
                 $newTreeVersions[] = [
                     $treeId => $newTreeVersion
