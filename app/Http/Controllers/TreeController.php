@@ -50,7 +50,7 @@ class TreeController extends Controller {
             'treeVersion' => ['required', 'max:40'],
             'type'        => ['required', 'integer', 'min:0'],
             'pid'         => ['required', 'integer', 'min:1'],
-            'title'       => ['required', 'max:100'],
+            'title'       => ['present',  'string',  'max:100'],
         ]);
 
         $spaceId     = $request->input('spaceId');

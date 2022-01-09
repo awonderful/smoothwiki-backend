@@ -59,14 +59,18 @@ class SearchService {
 			$articleIds = [];
 			$articleMap = [];
 			foreach ($items as $idx => $item) {
-				$articleIds[] = $item->objectId;
+				if ($item->objectType === config('dict.SearchObjectType.ARTICLE')) {
+					$articleIds[] = $item->objectId;
+				}
 			}
-			$articles = Article::getArticlesByIds($articleIds);
-			foreach ($articles as $article) {
-				$articleMap[$article->id] = $article;
-			}
-			foreach ($items as $idx => $item) {
-				$items[$idx]->nodeId = $articleMap[$item->objectId]->node_id;
+			if (count($articleIds) > 0) {
+				$articles = Article::getArticlesByIds($articleIds);
+				foreach ($articles as $article) {
+					$articleMap[$article->id] = $article;
+				}
+				foreach ($items as $idx => $item) {
+					$items[$idx]->nodeId = $articleMap[$item->objectId]->node_id;
+				}
 			}
 
 			//spaceType, spaceTitle
@@ -164,12 +168,14 @@ class SearchService {
 				foreach ($items as $idx => $item) {
 					if ($item->objectType === config('dict.SearchObjectType.TREE_NODE')) {
 						$cntArticles = [];
-						foreach ($nodeIdArticlesMap[$item->objectId] as $article) {
-							array_push($cntArticles, [
-								'id'    => $article->id,
-								'type'  => $article->type,
-								'title' => $article->title,
-							]);
+						if (isset($nodeIdArticlesMap[$item->objectId])) {
+							foreach ($nodeIdArticlesMap[$item->objectId] as $article) {
+								array_push($cntArticles, [
+									'id'    => $article->id,
+									'type'  => $article->type,
+									'title' => $article->title,
+								]);
+							}
 						}
 						$items[$idx]->articles = $cntArticles;
 					}
