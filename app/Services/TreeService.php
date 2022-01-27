@@ -6,7 +6,10 @@ use App\Models\TreeNode;
 use App\Exceptions\TreeUpdatedException;
 use App\Exceptions\TreeNotExistException;
 use App\Exceptions\UnfinishedDBOperationException;
+use App\Exceptions\TreeNodeNotExistException;
+use App\Exceptions\IllegalOperationException;
 use App\Services\PermissionChecker;
+use Illuminate\Database\Eloquent\Collection;
 
 class TreeService {
 
@@ -611,6 +614,7 @@ class TreeService {
      * ]
      * @throws TreeUpdatedException, IllegalOperationException
      */
+    /*
     public function moveNodeToAnotherTree(int $spaceId, int $nodeId, int $fromTreeId, string $fromTreeVersion, int $toTreeId, string $toTreeVersion, int $toPid, int $toLocation): string {
         //basic check
         $node = TreeNode::getNodeById($spaceId, $fromTreeId, $nodeId);
@@ -694,6 +698,7 @@ class TreeService {
 
         return TreeNode::modifyNodesOfMultipleTrees($spaceId, $treeUpdates);
     }
+    */
 
     /**
      * remove a node and all its descendent nodes

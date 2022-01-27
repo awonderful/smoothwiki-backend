@@ -68,6 +68,16 @@ class Space extends Model
                 'title'   => $title,
                 'content' => $desc
             ]);
+
+            $treeId = config('dict.TreeId.MAIN');
+            $rootNode = TreeNode::getRootNode($spaceId, $treeId);
+            if ($rootNode !== null && $rootNode->title !== $title) {
+                TreeNode::modifyNodes($spaceId, $treeId, $rootNode->version, [
+                    $rootNode->id => [
+                        'title' => $title
+                    ]
+                ]);
+            }
         });
     }
 

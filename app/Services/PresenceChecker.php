@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Models\TreeNode;
-use App\Models\TreeNodeNotExistException;
+use App\Exceptions\TreeNodeNotExistException;
 use App\Exceptions\SpaceNotExistException;
 
 class PresenceChecker {

@@ -8,6 +8,7 @@ use App\Models\SpaceMember;
 use App\Models\Users;
 use App\Exceptions\UnfinishedDBOperationException;
 use App\Exceptions\IllegalOperationException;
+use App\Exceptions\MemberNotExistException;
 use App\Services\PermissionChecker;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;

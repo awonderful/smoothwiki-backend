@@ -257,7 +257,6 @@ class TreeNode extends Model
     }
 
 
-
     /**
      * regenerate a non-root node's version
      * @param int $spaceId
@@ -327,9 +326,10 @@ class TreeNode extends Model
      *              ]
      *          ]
      *      ],
-    *       ...
+     *       ...
      *  ]
      */
+    /*
     public static function modifyNodesOfMultipleTrees(int $spaceId, array $treeUpdates) {
         return DB::transaction(function() use ($spaceId, $treeUpdates)  {
             $newTreeVersions = [];
@@ -348,6 +348,7 @@ class TreeNode extends Model
             return $newTreeVersions;
         });
     }
+    */
 
 
     public static function getMultiTreesNodes(array $spaceIds = [], array $conditions = [], array $fields = ['*']): collection {
