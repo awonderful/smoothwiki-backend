@@ -106,6 +106,23 @@ class AttachmentController extends Controller {
         return Storage::download($attachment->store_filename, $attachment->original_filename, $headers);
     }
 
+    public function thumbnail(Request $request) {
+        $request->validate([
+            'attachmentId'  => ['required', 'integer', 'min:1'],
+            'maxWidth'      => ['required', 'integer', 'min:1'],
+            'maxHeight'     => ['required', 'integer', 'min:1'],
+        ]);
+
+        $attachmentId  = $request->input('attachmentId');
+        $maxWidth      = $request->input('maxWidth');
+        $maxHeight     = $request->input('maxHeight');
+
+        $service = new AttachmentService();
+        $image = $service->generateThumbnail($attachmentId, $maxWidth, $maxHeight);
+
+        return $image->response('jpg', 100);
+    }
+
     public function getArticleAttachments(Request $request) {
          $request->validate([
             'spaceId'   => ['required', 'integer', 'min:1'],

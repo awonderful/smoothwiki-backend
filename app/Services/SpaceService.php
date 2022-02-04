@@ -17,11 +17,21 @@ class SpaceService {
     public function createSpace(int $type, string $title, string $desc, int $othersRead, int $othersWrite): int {
         $creator = Auth::id();
 
+        if ($type === config('dict.SpaceType.PERSON')) {
+            $user = Auth::user();
+            $title = $user->name;
+        }
+
         return Space::createSpace($type, $title, $desc, $creator, $othersRead, $othersWrite);
     }
 
     public function updateSpace(int $spaceId, string $title, string $desc, int $othersRead, int $othersWrite): void {
         PermissionChecker::administrateSpace($spaceId);
+
+        $space = Space::getSpaceById($spaceId);
+        if ($space->type === config('dict.SpaceType.PERSON')) {
+            $title = $space->title;
+        }
 
         Space::modifySpace($spaceId, $title, $desc, $othersRead, $othersWrite);
     }

@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 
 /*
 |--------------------------------------------------------------------------
@@ -19,7 +20,7 @@ Route::get('/', function () {
 
 Auth::routes();
 
-Route::get('/home', 'HomeController@index')->name('home');
+Route::get('/api/system/info', 'SystemController@info');
 
 Route::prefix('api')->middleware(['auth:web'])->group(function () {
     Route::get('user/info',       'UserController@getViewerInfo');
@@ -49,6 +50,7 @@ Route::prefix('api')->middleware(['auth:web'])->group(function () {
     Route::post('attachment/upload',       'AttachmentController@upload');
     Route::post('attachment/upload/chunk', 'AttachmentController@uploadInChunks');
     Route::get ('attachment/download',     'AttachmentController@download');
+    Route::get ('attachment/thumbnail',    'AttachmentController@thumbnail');
     Route::get ('attachment/list/article', 'AttachmentController@getArticleAttachments');
     Route::get ('attachment/list/ids',     'AttachmentController@getAttachmentsByIds');
 

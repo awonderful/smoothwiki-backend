@@ -4,11 +4,13 @@ namespace App\Services;
 
 use App\Models\Attachment;
 use App\Exceptions\AttachmentNotExistException;
+use App\Exceptions\InvalidImageException;
 use App\Services\PermissionChecker;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Intervention\Image\Facades\Image;
 
 class AttachmentService {
     public function addAttachment(int $spaceId, int $nodeId, int $articleId, UploadedFile $requestFile): int {
@@ -119,5 +121,16 @@ class AttachmentService {
         ]);
     }
 
+    public function generateThumbnail(int $attachmentId, int $maxWidth, int $maxHeight) {
+        $attachment = $this->getAttachmentById($attachmentId);
+        if (!in_array($attachment->extension, config('dict.ImageExts'))) {
+            throw new InvalidImageException();
+        }
 
+        $imgCnt = Storage::get($attachment->store_filename);
+        return Image::make($imgCnt)->resize($maxWidth, $maxHeight, function ($constraint) {
+            $constraint->aspectRatio();
+            $constraint->upsize();
+        });
+    }
 }
