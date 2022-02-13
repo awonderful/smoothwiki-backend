@@ -48,6 +48,7 @@ class SearchService {
 			return [
 				'count' => $data['count'],
 				'items' => $richItems,
+				'keyword' => $keyword,
 				'whichPage' => $whichPage,
 				'pageSize'  => $pageSize,
 				'pageCount' => intval(($data['count'] + $pageSize - 1) / $pageSize)

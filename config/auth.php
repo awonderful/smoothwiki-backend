@@ -39,6 +39,7 @@ return [
         'web' => [
             'driver' => 'session',
             'provider' => 'users',
+            'remember' => env('REMEMBER_DURATION', 10080),
         ],
 
         'api' => [
@@ -113,5 +114,4 @@ return [
     */
 
     'password_timeout' => 10800,
-
 ];

@@ -20,6 +20,8 @@ Route::get('/', function () {
 
 Auth::routes();
 
+Route::get('/home', 'HomeController@index')->name('home');
+
 Route::get('/api/system/info', 'SystemController@info');
 
 Route::prefix('api')->middleware(['auth:web'])->group(function () {

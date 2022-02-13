@@ -96,7 +96,7 @@ class AttachmentService {
         $uploader = Auth::id();
 
         $attachment = $this->getAttachmentById($attachmentId);
-        if ($attachment->space_id !== $spaceId || $attachment->node_id !== $nodeId || $attachment->article_id !== $articleId) {
+        if ($attachment->space_id !== $spaceId || $attachment->node_id !== $nodeId || $attachment->article_id !== $articleId || $attachment->uploader !== $uploader) {
             throw new AttachmentNotExistException();
         }
 
@@ -112,7 +112,7 @@ class AttachmentService {
         $uploader = Auth::id();
 
         $attachment = $this->getAttachmentById($attachmentId);
-        if ($attachment->space_id !== $spaceId || $attachment->node_id !== $nodeId || $attachment->article_id !== $articleId) {
+        if ($attachment->space_id !== $spaceId || $attachment->node_id !== $nodeId || $attachment->article_id !== $articleId || $attachment->uploader !== $uploader) {
             throw new AttachmentNotExistException();
         }
 
