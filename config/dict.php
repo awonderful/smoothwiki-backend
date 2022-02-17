@@ -33,6 +33,7 @@ return [
 		'MARKDOWN'         => 2, //MARKDOWN
 		'ATTACHMENT'       => 3, //附件
 		'MIND'             => 4, //脑图
+		'SPREADSHEET'      => 5, //表格
 	],
 	'SearchObjectType'   => [  //search表中的object_type字段
 		'SPACE'            => 1, //空间
